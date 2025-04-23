@@ -47,7 +47,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${monda.variable} ${urbanist.variable} antialiased`}
       >
-        <EdgeStoreProvider>{children}</EdgeStoreProvider>
+        <Provider>{children}</Provider>
       </body>
     </html>
   );
