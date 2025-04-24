@@ -139,7 +139,7 @@ model Vote {
   id        String   @id @default(uuid())
   userId    String
   crimeId   String
-  value     Int // 1 = upvote, -1 = downvote
+  value     Boolean
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   crime     Crime    @relation(fields: [crimeId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
