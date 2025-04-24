@@ -259,7 +259,6 @@ app.get("/lawyers/search", async (c) => {
 });
 
 
-
 //CRUD for crimes 
 app.get("/crimes", async (c) => {
   try {
@@ -416,6 +415,201 @@ app.get("/crimes/search", async (c) => {
   }
 });
 
+app.get("/crimes/:id", async (c) => {
+  const id = c.req.param("id");
+
+  try {
+    const crime = await db.crime.findUnique({
+      where: { id },
+      include: {
+        media: true,
+        comments: {
+          include: {
+            user: true,
+          },
+        },
+        votes: {
+          include: {
+            user: true,
+          },
+        },
+        user: true,
+      },
+    });
+
+    if (!crime) {
+      return c.json({ message: "Crime not found." }, 404);
+    }
+
+    const totalVotes = crime.votes.length;
+    const upvotes = crime.votes.filter(v => v.value === true).length;
+    const downvotes = totalVotes - upvotes;
+
+    return c.json({
+      message: "Crime retrieved successfully.",
+      data: {
+        ...crime,
+        voteStats: {
+          total: totalVotes,
+          upvotes,
+          downvotes,
+        },
+      },
+      status: 200,
+    });
+  } catch (error) {
+    return c.json({
+      message: "Failed to retrieve crime.",
+      error: error instanceof Error ? error.message : "Unknown error",
+    }, 500);
+  }
+});
+
+app.post("/crimes/:id/vote", async (c) => {
+  const userId = c.req.header("x-user-id"); // You extract from auth session/token
+  const crimeId = c.req.param("id");
+  const { value } = await c.req.json();
+
+  if (!userId) {
+    return c.json({ message: "User ID is required in the header." }, 401);
+  }
+
+  if (typeof value !== "boolean") {
+    return c.json({ message: "Vote value must be true or false." }, 400);
+  }
+
+  try {
+    const existingVote = await db.vote.findUnique({
+      where: {
+        userId_crimeId: {
+          userId,
+          crimeId,
+        },
+      },
+    });
+
+    if (!existingVote) {
+      const vote = await db.vote.create({
+        data: {
+          userId,
+          crimeId,
+          value,
+        },
+      });
+      return c.json({ message: "Vote recorded.", data: vote, status: 201 });
+    }
+
+    if (existingVote.value === value) {
+      await db.vote.delete({
+        where: {
+          userId_crimeId: {
+            userId,
+            crimeId,
+          },
+        },
+      });
+      return c.json({ message: "Vote removed.", status: 200 });
+    }
+
+    const updatedVote = await db.vote.update({
+      where: {
+        userId_crimeId: {
+          userId,
+          crimeId,
+        },
+      },
+      data: {
+        value,
+      },
+    });
+
+    return c.json({ message: "Vote updated.", data: updatedVote, status: 200 });
+  } catch (error) {
+    return c.json({
+      message: "Failed to vote.",
+      error: error instanceof Error ? error.message : "Unknown error",
+    }, 500);
+  }
+});
+
+
+//CRUD for comments
+// Create a comment
+app.post("/crimes/:id/comments", async (c) => {
+  const userId = c.req.header("x-user-id");
+  const crimeId = c.req.param("id");
+  const { content } = await c.req.json();
+
+  if (!userId || !content) {
+    return c.json({ message: "User ID and comment content are required." }, 400);
+  }
+
+  try {
+    // Check if user exists
+    const user = await db.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      return c.json({ message: "User not found." }, 404);
+    }
+
+    // Check if crime exists
+    const crime = await db.crime.findUnique({ where: { id: crimeId } });
+    if (!crime) {
+      return c.json({ message: "Crime not found." }, 404);
+    }
+
+    const comment = await db.comment.create({
+      data: {
+        content,
+        userId,
+        crimeId,
+      },
+      include: {
+        user: true,
+      },
+    });
+
+    return c.json({ message: "Comment created.", data: comment, status: 201 });
+  } catch (error) {
+    return c.json({
+      message: "Failed to create comment.",
+      error: error instanceof Error ? error.message : "Unknown error",
+    }, 500);
+  }
+});
+
+// Get comments for a crime
+app.get("/crimes/:id/comments", async (c) => {
+  const crimeId = c.req.param("id");
+
+  try {
+    // Optional: Check if crime exists
+    const crime = await db.crime.findUnique({ where: { id: crimeId } });
+    if (!crime) {
+      return c.json({ message: "Crime not found." }, 404);
+    }
+
+    const comments = await db.comment.findMany({
+      where: { crimeId },
+      include: {
+        user: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return c.json({
+      message: "Comments fetched successfully.",
+      data: comments,
+      status: 200,
+    });
+  } catch (error) {
+    return c.json({
+      message: "Failed to fetch comments.",
+      error: error instanceof Error ? error.message : "Unknown error",
+    }, 500);
+  }
+});
 
 
 
