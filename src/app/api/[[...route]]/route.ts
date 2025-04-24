@@ -41,6 +41,9 @@ app.get("/lawyers", async (c) => {
 
     const lawyers = await db.lawyer.findMany({
       where: { isVerified: true },
+      include: {
+        user: true
+      },
       skip,
       take: limit,
     });
@@ -180,6 +183,238 @@ app.delete("/lawyers/:id", async (c) => {
   }
 });
 
+app.get("/lawyers/:id", async (c) => {
+  const id = c.req.param("id");
+
+  try {
+    const lawyer = await db.lawyer.findUnique({
+      where: { id },
+      include: {
+        user: true,
+      },
+    });
+
+    if (!lawyer) {
+      return c.json({ message: "Lawyer not found." }, 404);
+    }
+
+    return c.json({
+      message: "Lawyer retrieved successfully.",
+      data: lawyer,
+      status: 200,
+    });
+  } catch (error) {
+    return c.json({
+      message: "Failed to fetch lawyer.",
+      error: error instanceof Error ? error.message : "Unknown error",
+    }, 500);
+  }
+});
+
+
+app.get("/lawyers/search", async (c) => {
+  const query = c.req.query("q");
+  const page = parseInt(c.req.query("page") || "1");
+  const limit = parseInt(c.req.query("limit") || "10");
+  const skip = (page - 1) * limit;
+
+  if (!query || query.trim() === "") {
+    return c.json({ message: "Please provide a search query." }, 400);
+  }
+
+  try {
+    const results = await db.lawyer.findMany({
+      where: {
+        isVerified: true,
+        OR: [
+          { legalName: { contains: query, mode: "insensitive" } },
+          { specialization: { contains: query, mode: "insensitive" } },
+        ],
+      },
+      include: {
+        user: true,
+      },
+      orderBy: {
+        legalName: "asc",
+      },
+      skip,
+      take: limit,
+    });
+
+    return c.json({
+      message: `Search results for "${query}"`,
+      data: results,
+      pagination: {
+        page,
+        limit,
+      },
+      status: 200,
+    });
+  } catch (error) {
+    return c.json({
+      message: "Failed to search lawyers.",
+      error: error instanceof Error ? error.message : "Unknown error",
+    }, 500);
+  }
+});
+
+
+
+//CRUD for crimes 
+app.get("/crimes", async (c) => {
+  try {
+    const crimes = await db.crime.findMany({
+      orderBy: { createdAt: "desc" },
+      include: {
+        media: true,
+        comments: {
+          include: {
+            user: true,
+          },
+        },
+        votes: {
+          include: {
+            user: true,
+          },
+        },
+        user: true,
+      },
+    });
+
+    const formattedCrimes = crimes.map(crime => {
+      const totalVotes = crime.votes.length;
+      const upvotes = crime.votes.filter(v => v.value === true).length;
+      const downvotes = totalVotes - upvotes;
+
+      return {
+        ...crime,
+        voteStats: {
+          total: totalVotes,
+          upvotes,
+          downvotes,
+        }
+      };
+    });
+
+    return c.json({
+      message: "Crimes retrieved successfully.",
+      data: formattedCrimes,
+      status: 200,
+    });
+  } catch (error) {
+    return c.json({
+      message: "Failed to retrieve crimes.",
+      error: error instanceof Error ? error.message : "Unknown error",
+    }, 500);
+  }
+});
+
+app.post("/crimes", async (c) => {
+  try {
+    const body = await c.req.json();
+    const { title, description, location, userId, isLive } = body;
+
+    const newCrime = await db.crime.create({
+      data: {
+        title,
+        description,
+        location,
+        isLive,
+        user: userId ? { connect: { id: userId } } : undefined,
+      },
+    });
+
+    return c.json({
+      message: "Crime created successfully.",
+      data: newCrime,
+      status: 201,
+    });
+  } catch (error) {
+    return c.json({
+      message: "Failed to create crime.",
+      error: error instanceof Error ? error.message : "Unknown error",
+    }, 500);
+  }
+});
+
+app.put("/crimes/:id", async (c) => {
+  try {
+    const crimeId = c.req.param("id");
+    const body = await c.req.json();
+
+    const updatedCrime = await db.crime.update({
+      where: { id: crimeId },
+      data: {
+        title: body.title,
+        description: body.description,
+        location: body.location,
+        isLive: body.isLive,
+        isVerified: body.isVerified,
+        updatedAt: new Date(),
+      },
+    });
+
+    return c.json({
+      message: "Crime updated successfully.",
+      data: updatedCrime,
+      status: 200,
+    });
+  } catch (error) {
+    return c.json({
+      message: "Failed to update crime.",
+      error: error instanceof Error ? error.message : "Unknown error",
+    }, 500);
+  }
+});
+
+app.get("/crimes/search", async (c) => {
+  try {
+    const query = c.req.query("query");
+
+    const crimes = await db.crime.findMany({
+      where: {
+        OR: [
+          { title: { contains: query, mode: "insensitive" } },
+          { description: { contains: query, mode: "insensitive" } },
+          { location: { contains: query, mode: "insensitive" } },
+        ],
+      },
+      orderBy: { createdAt: "desc" },
+      include: {
+        media: true,
+        comments: { include: { user: true } },
+        votes: { include: { user: true } },
+        user: true,
+      },
+    });
+
+    const formattedCrimes = crimes.map(crime => {
+      const totalVotes = crime.votes.length;
+      const upvotes = crime.votes.filter(v => v.value === true).length;
+      const downvotes = totalVotes - upvotes;
+
+      return {
+        ...crime,
+        voteStats: {
+          total: totalVotes,
+          upvotes,
+          downvotes,
+        }
+      };
+    });
+
+    return c.json({
+      message: "Search successful.",
+      data: formattedCrimes,
+      status: 200,
+    });
+  } catch (error) {
+    return c.json({
+      message: "Search failed.",
+      error: error instanceof Error ? error.message : "Unknown error",
+    }, 500);
+  }
+});
 
 
 
