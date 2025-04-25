@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { Prisma } from "@prisma/client";
+import { auth } from "@/lib/auth"; // Import the auth instance
 import { Hono } from "hono";
 
 const app = new Hono()
@@ -62,81 +63,173 @@ const app = new Hono()
       );
     }
   })
-  .post("/lawyers", async (c) => {
-    try {
-      const lawyerData = await c.req.json();
-      const lawyer = await db.lawyer.create({ data: lawyerData });
 
-      return c.json({
-        message: "Lawyer created successfully.",
-        data: lawyer,
-        status: 201,
-      });
-    } catch (error) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === "P2002"
-      ) {
-        const target = (error.meta?.target as string[]) || [];
-
-        if (target.includes("cnic")) {
-          return c.json(
-            { message: "A lawyer with this CNIC already exists." },
-            409
-          );
-        } else if (target.includes("licenseNo")) {
-          return c.json(
-            { message: "A lawyer with this license number already exists." },
-            409
-          );
-        } else {
-          return c.json({ message: "A unique field already exists." }, 409);
-        }
-      }
-
-      return c.json(
-        {
-          message: "An error occurred while creating the lawyer.",
-          error: error instanceof Error ? error.message : "Unknown error",
-        },
-        500
-      );
+  .post("/lawyer/profile", async (c) => {
+    const session = await auth.api.getSession({ headers: c.req.raw.headers });
+    if (!session || !session.user) {
+      return c.json({ error: "Unauthorized" }, 401);
     }
-  })
-  .put("/lawyers/:id", async (c) => {
-    const id = c.req.param("id");
-
-    try {
-      const data = await c.req.json();
-
-      const existing = await db.lawyer.findUnique({ where: { id } });
-      if (!existing) {
-        return c.json({ message: "Lawyer not found." }, 406);
+  
+    const user = session.user;
+    const data = await c.req.json();
+  
+    const existingLawyer = await db.lawyer.findUnique({
+      where: { userId: user.id },
+    });
+  
+    if (user.role === "LAWYER") {
+      // Already a lawyer: Update profile
+      if (!existingLawyer) {
+        return c.json({ error: "Lawyer profile missing" }, 404);
       }
-
-      const updatedLawyer = await db.lawyer.update({
-        where: { id },
+  
+      const updated = await db.lawyer.update({
+        where: { userId: user.id },
         data: {
-          ...data,
+          legalName: data.legalName,
+          specialization: data.specialization,
+          experience: data.experience,
+          description: data.description,
+          licenseNo: data.licenseNo,
+          fatherName: data.fatherName,
+          cnic: data.cnic,
           updatedAt: new Date(),
         },
       });
-
-      return c.json({
-        message: "Lawyer updated successfully.",
-        data: updatedLawyer,
-        status: 200,
-      });
-    } catch (error) {
-      return c.json(
-        {
-          message: "Failed to update lawyer.",
-          error: error instanceof Error ? error.message : "Unknown error",
-        },
-        500
-      );
+  
+      return c.json({ message: "Lawyer profile updated", data: updated });
     }
+  
+    if (user.role === "USER") {
+      // User upgrading to lawyer
+      if (existingLawyer) {
+        return c.json({ error: "Already registered as a lawyer" }, 400);
+      }
+  
+      // Check required fields
+      const requiredFields = [
+        "legalName",
+        "experience",
+        "description",
+        "licenseNo",
+        "fatherName",
+        "cnic",
+      ];
+  
+      for (const field of requiredFields) {
+        if (!data[field]) {
+          return c.json({ error: `Missing required field: ${field}` }, 400);
+        }
+      }
+  
+      const created = await db.lawyer.create({
+        data: {
+          legalName: data.legalName,
+          specialization: data.specialization,
+          experience: data.experience,
+          description: data.description,
+          licenseNo: data.licenseNo,
+          fatherName: data.fatherName,
+          cnic: data.cnic,
+          isVerified: false,
+          userId: user.id,
+        },
+      });
+  
+      // Promote user to LAWYER
+      await db.user.update({
+        where: { id: user.id },
+        data: { role: "LAWYER" },
+      });
+  
+      return c.json({ message: "Lawyer profile created", data: created });
+    }
+  
+    return c.json({ error: "Forbidden for your role" }, 403);
   })
+  
+
+  .put("/lawyer/profile", async (c) => {
+    const session = await auth.api.getSession({ headers: c.req.raw.headers });
+    if (!session || !session.user) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+  
+    const user = session.user;
+    const data = await c.req.json();
+  
+    const existingLawyer = await db.lawyer.findUnique({
+      where: { userId: user.id },
+    });
+  
+    if (user.role === "LAWYER") {
+      if (!existingLawyer) {
+        return c.json({ error: "Lawyer profile missing" }, 404);
+      }
+  
+      // Preserve old data if no new input
+      const updated = await db.lawyer.update({
+        where: { userId: user.id },
+        data: {
+          legalName: data.legalName ?? existingLawyer.legalName,
+          specialization: data.specialization ?? existingLawyer.specialization,
+          experience: data.experience ?? existingLawyer.experience,
+          description: data.description ?? existingLawyer.description,
+          licenseNo: data.licenseNo ?? existingLawyer.licenseNo,
+          fatherName: data.fatherName ?? existingLawyer.fatherName,
+          cnic: data.cnic ?? existingLawyer.cnic,
+          updatedAt: new Date(),
+        },
+      });
+  
+      return c.json({ message: "Lawyer profile updated", data: updated });
+    }
+  
+    if (user.role === "USER") {
+      if (existingLawyer) {
+        return c.json({ error: "Already registered as a lawyer" }, 400);
+      }
+  
+      const requiredFields = [
+        "legalName",
+        "experience",
+        "description",
+        "licenseNo",
+        "fatherName",
+        "cnic",
+      ];
+  
+      for (const field of requiredFields) {
+        if (!data[field]) {
+          return c.json({ error: `Missing required field: ${field}` }, 400);
+        }
+      }
+  
+      const created = await db.lawyer.create({
+        data: {
+          legalName: data.legalName,
+          specialization: data.specialization,
+          experience: data.experience,
+          description: data.description,
+          licenseNo: data.licenseNo,
+          fatherName: data.fatherName,
+          cnic: data.cnic,
+          isVerified: false,
+          userId: user.id,
+        },
+      });
+  
+      await db.user.update({
+        where: { id: user.id },
+        data: { role: "LAWYER" },
+      });
+  
+      return c.json({ message: "Lawyer profile created", data: created });
+    }
+  
+    return c.json({ error: "Forbidden for your role" }, 403);
+  })
+
   .delete("/lawyers/:id", async (c) => {
     const id = c.req.param("id");
 
