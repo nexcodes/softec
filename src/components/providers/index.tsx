@@ -1,3 +1,5 @@
+'use client';
+
 import React from "react";
 import { Toaster } from "../ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";

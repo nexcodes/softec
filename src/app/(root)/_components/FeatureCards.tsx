@@ -20,6 +20,7 @@ const features = [
       "Report incidents without revealing your identity, promoting safety and trust.",
     background: "/image2.jpg",
     color: "from-blue-500/80",
+    link: "/report",
   },
   {
     title: "Geo Crime Mapping",

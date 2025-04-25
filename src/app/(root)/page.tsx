@@ -13,6 +13,7 @@ export default function Home() {
       <LogoCarousel />
       <CTASignup />
       <Footer />
+      
     </>
   );
 }
