@@ -167,18 +167,18 @@ export function SignUpForm() {
         </form>
       </Form>
 
-      <div className="relative my-6">
+      <div className="relative my-4">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-black"></div>
+          <span className="w-full border-t" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-white px-2 text-black font-medium">
+          <span className="px-2 bg-background text-muted-foreground">
             Or continue with
           </span>
         </div>
       </div>
 
-      <div className="mb-4">
+      <div>
         <Button
           variant="outline"
           onClick={handleGoogleSignUp}

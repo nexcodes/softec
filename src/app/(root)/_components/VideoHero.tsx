@@ -1,8 +1,9 @@
 "use client";
 
-import { motion } from "framer-motion";
 import Link from "next/link";
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
+import Image from "next/image";
+import { motion } from "framer-motion";
 
 // Array of video sources
 const videos = [
@@ -22,6 +23,7 @@ const VideoHero: React.FC = () => {
 
   useEffect(() => {
     setIsClient(true);
+    
   }, []);
 
   const gridItemVariants = {
@@ -44,7 +46,19 @@ const VideoHero: React.FC = () => {
   };
 
   return (
-    <section className="relative min-h-screen w-full overflow-hidden">
+    <section className="relative min-h-[90vh] w-full overflow-hidden bg-black pt-20">
+      {/* Background Image */}
+      <div
+        className="absolute inset-0 bg-cover bg-center opacity-25"
+        style={{
+          backgroundImage: "url('/image.jpg')",
+        }}
+      ></div>
+
+      {/* Header */}
+
+
+
       <div className="container mx-auto px-4 py-12">
         <div className="flex flex-col md:flex-row items-center space-y-8 md:space-y-0 md:space-x-8">
           {/* Left Side */}
@@ -61,8 +75,7 @@ const VideoHero: React.FC = () => {
               <span className="text-blue-500">You</span>
             </h1>
             <p className="text-lg md:text-xl text-gray-300 max-w-xl mb-8">
-              Join us in creating a safer and more secure future. Take action
-              today!
+              Join us in creating a safer and more secure future. Take action today!
             </p>
             <Link
               href="/report"
@@ -81,29 +94,43 @@ const VideoHero: React.FC = () => {
               className="w-full md:w-3/5"
             >
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-4">
-                {videos.map((videoSrc, index) => (
-                  <motion.div
-                    key={`${videoSrc}-${index}`}
-                    custom={index}
-                    initial="hidden"
-                    animate="visible"
-                    whileHover="hover"
-                    variants={gridItemVariants}
-                    className="relative overflow-hidden rounded-lg border-2 border-gray-900 hover:border-blue-500 transition duration-300"
-                    style={{ aspectRatio: "16/9" }}
-                  >
-                    <video
-                      autoPlay
-                      muted
-                      loop
-                      playsInline
-                      className="absolute inset-0 w-full h-full object-cover opacity-75 hover:opacity-100 transform duration-300"
-                    >
-                      <source src={videoSrc} type="video/mp4" />
-                      Your browser does not support the video tag.
-                    </video>
-                  </motion.div>
-                ))}
+              {videos.map((videoSrc, index) => (
+  <motion.div
+    key={`${videoSrc}-${index}`}
+    custom={index}
+    initial="hidden"
+    animate="visible"
+    whileHover="hover"
+    variants={gridItemVariants}
+    className="relative overflow-hidden rounded-lg border-2 border-gray-900 hover:border-blue-500 transition duration-300"
+    style={{ aspectRatio: "16/9" }}
+  >
+    <video
+      autoPlay
+      muted
+      loop
+      playsInline
+      className="absolute inset-0 w-full h-full object-cover opacity-75 hover:opacity-100 transform duration-300"
+      onError={(e) => {
+        console.error(`Failed to load video: ${videoSrc}`, e);
+        // Hide the video element
+        e.currentTarget.style.display = 'none';
+        const parent = e.currentTarget.parentElement;
+        if (parent) {
+          parent.style.backgroundColor = '#1f2937'; // Add a background color as fallback
+          // Create and append an error message element
+          const errorMsg = document.createElement('div');
+          errorMsg.className = 'absolute inset-0 flex items-center justify-center text-white text-xs p-2';
+          errorMsg.textContent = 'Video unavailable';
+          parent.appendChild(errorMsg);
+        }
+      }}
+    >
+      <source src={videoSrc} type="video/mp4" />
+      Your browser does not support the video tag.
+    </video>
+  </motion.div>
+))}
               </div>
             </motion.div>
           )}
