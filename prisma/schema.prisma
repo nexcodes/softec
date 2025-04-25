@@ -40,6 +40,7 @@ model Session {
   id        String   @id
   expiresAt DateTime
   token     String
+  role      Role @default(USER)
   createdAt DateTime
   updatedAt DateTime
   ipAddress String?
@@ -82,7 +83,7 @@ model Verification {
 }
 
 model Lawyer {
-  id             String   @id @default(uuid())
+  id             String   @id @default(cuid())
   legalName      String
   userId         String   @unique
   user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -102,7 +103,7 @@ model Lawyer {
 }
 
 model Crime {
-  id          String   @id @default(uuid())
+  id          String   @id @default(cuid())
   userId      String?
   user        User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
   title       String
@@ -124,7 +125,7 @@ model Crime {
 }
 
 model Comment {
-  id        String   @id @default(uuid())
+  id        String   @id @default(cuid())
   content   String
   userId    String?
   user      User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -136,7 +137,7 @@ model Comment {
 }
 
 model Vote {
-  id        String   @id @default(uuid())
+  id        String   @id @default(cuid())
   userId    String
   crimeId   String
   value     Boolean
@@ -149,7 +150,7 @@ model Vote {
 }
 
 model Media {
-  id         String    @id @default(uuid())
+  id         String    @id @default(cuid())
   url        String // URL to the image or video
   type       MediaType // ENUM: IMAGE or VIDEO
   crimeId    String
