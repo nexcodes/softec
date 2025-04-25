@@ -4,7 +4,7 @@ import { auth } from "@/lib/auth"; // Import the auth instance
 import { Hono } from "hono";
 
 const app = new Hono()
-  .get("/lawyers", async (c) => {
+  .get("/", async (c) => {
     try {
       let page = Number(c.req.query("page")) || 1;
       let limit = Number(c.req.query("limit")) || 10;
@@ -64,8 +64,10 @@ const app = new Hono()
     }
   })
 
-  .post("/lawyer/profile", async (c) => {
+  .post("/profile", async (c) => {
     const session = await auth.api.getSession({ headers: c.req.raw.headers });
+  
+    // Ensure the user is authenticated
     if (!session || !session.user) {
       return c.json({ error: "Unauthorized" }, 401);
     }
@@ -73,56 +75,34 @@ const app = new Hono()
     const user = session.user;
     const data = await c.req.json();
   
+    // Check if the user's email is verified
+    if (!user.emailVerified) {
+      return c.json({ error: "Email not verified. Please verify your email before proceeding." }, 400);
+    }
+  
+    // Check if the user already has a lawyer profile
     const existingLawyer = await db.lawyer.findUnique({
       where: { userId: user.id },
     });
   
-    if (user.role === "LAWYER") {
-      // Already a lawyer: Update profile
-      if (!existingLawyer) {
-        return c.json({ error: "Lawyer profile missing" }, 404);
-      }
-  
-      const updated = await db.lawyer.update({
-        where: { userId: user.id },
-        data: {
-          legalName: data.legalName,
-          specialization: data.specialization,
-          experience: data.experience,
-          description: data.description,
-          licenseNo: data.licenseNo,
-          fatherName: data.fatherName,
-          cnic: data.cnic,
-          updatedAt: new Date(),
-        },
-      });
-  
-      return c.json({ message: "Lawyer profile updated", data: updated });
+    // If the user is already a lawyer, inform them
+    if (existingLawyer) {
+      return c.json({ error: "You are already registered as a lawyer" }, 400);
     }
   
     if (user.role === "USER") {
-      // User upgrading to lawyer
-      if (existingLawyer) {
-        return c.json({ error: "Already registered as a lawyer" }, 400);
-      }
+      // If the user is a regular user, allow them to upgrade to a lawyer
   
-      // Check required fields
-      const requiredFields = [
-        "legalName",
-        "experience",
-        "description",
-        "licenseNo",
-        "fatherName",
-        "cnic",
-      ];
-  
+      // Validate that all required lawyer fields are provided
+      const requiredFields = ["legalName", "experience", "description", "licenseNo", "fatherName", "cnic"];
       for (const field of requiredFields) {
         if (!data[field]) {
           return c.json({ error: `Missing required field: ${field}` }, 400);
         }
       }
   
-      const created = await db.lawyer.create({
+      // Create the new lawyer profile
+      const createdLawyer = await db.lawyer.create({
         data: {
           legalName: data.legalName,
           specialization: data.specialization,
@@ -131,26 +111,28 @@ const app = new Hono()
           licenseNo: data.licenseNo,
           fatherName: data.fatherName,
           cnic: data.cnic,
-          isVerified: false,
+          isVerified: false, // Initially, the lawyer profile is not verified
           userId: user.id,
         },
       });
   
-      // Promote user to LAWYER
+      // Promote the user to LAWYER role
       await db.user.update({
         where: { id: user.id },
         data: { role: "LAWYER" },
       });
   
-      return c.json({ message: "Lawyer profile created", data: created });
+      return c.json({ message: "Successfully upgraded to Lawyer", data: createdLawyer });
     }
   
+    // If the user role is neither LAWYER nor USER, return forbidden
     return c.json({ error: "Forbidden for your role" }, 403);
   })
   
-
-  .put("/lawyer/profile", async (c) => {
+  .put("/profile", async (c) => {
     const session = await auth.api.getSession({ headers: c.req.raw.headers });
+  
+    // Ensure the user is authenticated
     if (!session || !session.user) {
       return c.json({ error: "Unauthorized" }, 401);
     }
@@ -158,79 +140,42 @@ const app = new Hono()
     const user = session.user;
     const data = await c.req.json();
   
+    // Check if the user is a Lawyer
+    if (user.role !== "LAWYER") {
+      return c.json({ error: "Only a Lawyer can update their profile" }, 403);
+    }
+  
+    // Fetch the existing Lawyer profile
     const existingLawyer = await db.lawyer.findUnique({
       where: { userId: user.id },
     });
   
-    if (user.role === "LAWYER") {
-      if (!existingLawyer) {
-        return c.json({ error: "Lawyer profile missing" }, 404);
-      }
-  
-      // Preserve old data if no new input
-      const updated = await db.lawyer.update({
-        where: { userId: user.id },
-        data: {
-          legalName: data.legalName ?? existingLawyer.legalName,
-          specialization: data.specialization ?? existingLawyer.specialization,
-          experience: data.experience ?? existingLawyer.experience,
-          description: data.description ?? existingLawyer.description,
-          licenseNo: data.licenseNo ?? existingLawyer.licenseNo,
-          fatherName: data.fatherName ?? existingLawyer.fatherName,
-          cnic: data.cnic ?? existingLawyer.cnic,
-          updatedAt: new Date(),
-        },
-      });
-  
-      return c.json({ message: "Lawyer profile updated", data: updated });
+    // If the Lawyer profile does not exist, return an error
+    if (!existingLawyer) {
+      return c.json({ error: "Lawyer profile not found" }, 404);
     }
   
-    if (user.role === "USER") {
-      if (existingLawyer) {
-        return c.json({ error: "Already registered as a lawyer" }, 400);
-      }
+    // Update the Lawyer profile, preserving the existing data for fields that aren't provided
+    const updated = await db.lawyer.update({
+      where: { userId: user.id },
+      data: {
+        legalName: data.legalName ?? existingLawyer.legalName,
+        specialization: data.specialization ?? existingLawyer.specialization,
+        experience: data.experience ?? existingLawyer.experience,
+        description: data.description ?? existingLawyer.description,
+        licenseNo: data.licenseNo ?? existingLawyer.licenseNo,
+        fatherName: data.fatherName ?? existingLawyer.fatherName,
+        cnic: data.cnic ?? existingLawyer.cnic,
+        updatedAt: new Date(), // Ensure the profile update timestamp is set
+      },
+    });
   
-      const requiredFields = [
-        "legalName",
-        "experience",
-        "description",
-        "licenseNo",
-        "fatherName",
-        "cnic",
-      ];
-  
-      for (const field of requiredFields) {
-        if (!data[field]) {
-          return c.json({ error: `Missing required field: ${field}` }, 400);
-        }
-      }
-  
-      const created = await db.lawyer.create({
-        data: {
-          legalName: data.legalName,
-          specialization: data.specialization,
-          experience: data.experience,
-          description: data.description,
-          licenseNo: data.licenseNo,
-          fatherName: data.fatherName,
-          cnic: data.cnic,
-          isVerified: false,
-          userId: user.id,
-        },
-      });
-  
-      await db.user.update({
-        where: { id: user.id },
-        data: { role: "LAWYER" },
-      });
-  
-      return c.json({ message: "Lawyer profile created", data: created });
-    }
-  
-    return c.json({ error: "Forbidden for your role" }, 403);
+    // Return a success message along with the updated data
+    return c.json({ message: "Lawyer profile updated", data: updated });
   })
+  
 
-  .delete("/lawyers/:id", async (c) => {
+  .delete("/:id", async (c) => {
     const id = c.req.param("id");
 
     try {
@@ -256,7 +201,7 @@ const app = new Hono()
       );
     }
   })
-  .get("/lawyers/:id", async (c) => {
+  .get("/:id", async (c) => {
     const id = c.req.param("id");
 
     try {
@@ -286,7 +231,7 @@ const app = new Hono()
       );
     }
   })
-  .get("/lawyers/search", async (c) => {
+  .get("/search", async (c) => {
     const query = c.req.query("q");
     const page = parseInt(c.req.query("page") || "1");
     const limit = parseInt(c.req.query("limit") || "10");
