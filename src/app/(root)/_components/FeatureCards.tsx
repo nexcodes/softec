@@ -54,6 +54,7 @@ const features = [
       "Explore active communities in your area and connect with those making a difference.",
     background: "/image7.jpg",
     color: "from-yellow-400/80",
+    link: "/communities",
     
   },
   {
