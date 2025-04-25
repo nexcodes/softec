@@ -11,7 +11,7 @@ import {
 } from "@/schema";
 
 const app = new Hono()
-  .get("/lawyers", async (c) => {
+  .get("/", async (c) => {
     try {
       let page = Number(c.req.query("page")) || 1;
       let limit = Number(c.req.query("limit")) || 10;
