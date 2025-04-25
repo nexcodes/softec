@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 
 import {
   FaLock,
@@ -43,6 +44,7 @@ const features = [
       "Easily book verified lawyers for immediate legal support in your area.",
     background: "/image5.jpg",
     color: "from-red-400/80",
+    link: "/lawyer",
   },
   {
     title: "Available Communites",
@@ -51,6 +53,7 @@ const features = [
       "Explore active communities in your area and connect with those making a difference.",
     background: "/image7.jpg",
     color: "from-yellow-400/80",
+    
   },
   {
     title: "Crime Analytics",
@@ -161,16 +164,25 @@ const FeatureCards = () => {
 
                 {/* Learn More Button */}
                 <div
-                  className={`feature-button mt-6 ${
-                    isClient ? "animate-fadeIn" : ""
-                  }`}
-                  style={{
-                    animationDelay: `${index * 0.2 + 1.3}s`,
-                  }}
+  className={`feature-button mt-6 ${
+    isClient ? "animate-fadeIn" : ""
+  }`}
+  style={{
+    animationDelay: `${index * 0.2 + 1.3}s`,
+  }}
                 >
+                  {feature.link ? (
+    <Link 
+      href={feature.link}
+      className="text-white text-sm border-b border-white/50 pb-1 hover:border-white transition-all hover:translate-x-1 inline-block"
+    >
+      Learn more
+    </Link>
+  ) : (
                   <button className="text-white text-sm border-b border-white/50 pb-1 hover:border-white transition-all hover:translate-x-1">
                     Learn more
                   </button>
+  )}
                 </div>
               </div>
             </div>
