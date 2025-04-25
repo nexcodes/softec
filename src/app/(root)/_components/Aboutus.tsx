@@ -18,7 +18,7 @@ const teamMembers = [
   {
     name: "Muhammad Hassan Ali",
     role: "Backend Developer",
-    image: "/hassan.jpg",
+    image: "/Hassan.jpg",
     description: "Full Stack Engineer with a passion for creating scalable applications.",
     social: {
       github: "https://github.com/MHassanAli1",

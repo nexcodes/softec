@@ -9,8 +9,8 @@ dist
 build
 
 # Environment and config files
-.env*
-!.env.example
+# .env*
+# !.env.example
 
 # Version control
 .git
