@@ -56,7 +56,11 @@ export const createLawyerSchema = z.object({
 export const updateLawyerSchema = z.object({
   legalName: z.string().min(1, "Legal name is required").optional(),
   specialization: z.string().optional(),
-  experience: z.number().int().positive("Experience must be a positive number").optional(),
+  experience: z
+    .number()
+    .int()
+    .positive("Experience must be a positive number")
+    .optional(),
   description: z.string().min(1, "Description is required").optional(),
   licenseNo: z.string().min(1, "License number is required").optional(),
   fatherName: z.string().min(1, "Father's name is required").optional(),
@@ -66,4 +70,30 @@ export const updateLawyerSchema = z.object({
 
 export const getLawyersBySpecializationSchema = z.object({
   specialization: z.string().min(1, "Specialization is required"),
+  page: z
+    .string()
+    .optional()
+    .transform((val) => (val ? parseInt(val, 10) : 1)),
+  limit: z
+    .string()
+    .optional()
+    .transform((val) => {
+      const limit = val ? parseInt(val, 10) : 10;
+      return limit > 100 ? 100 : limit < 1 ? 10 : limit;
+    }),
+});
+
+// Pagination schema
+export const paginationQuerySchema = z.object({
+  page: z
+    .string()
+    .optional()
+    .transform((val) => (val ? parseInt(val, 10) : 1)),
+  limit: z
+    .string()
+    .optional()
+    .transform((val) => {
+      const limit = val ? parseInt(val, 10) : 10;
+      return limit > 100 ? 100 : limit < 1 ? 10 : limit;
+    }),
 });

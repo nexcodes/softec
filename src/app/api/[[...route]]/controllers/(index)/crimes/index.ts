@@ -9,7 +9,6 @@ import {
   voteSchema,
   createCommentSchema,
   idParamSchema,
-  userIdHeaderSchema,
 } from "@/schema";
 import { currentUser } from "@/lib/current-user";
 
@@ -235,7 +234,6 @@ const app = new Hono()
   .post(
     "/:id/vote",
     zValidator("param", idParamSchema),
-    zValidator("header", userIdHeaderSchema),
     zValidator("json", voteSchema),
     async (c) => {
       const userId = (await currentUser())?.id;
@@ -310,7 +308,6 @@ const app = new Hono()
   .post(
     "/:id/comments",
     zValidator("param", idParamSchema),
-    zValidator("header", userIdHeaderSchema),
     zValidator("json", createCommentSchema),
     async (c) => {
       const userId = (await currentUser())?.id;
