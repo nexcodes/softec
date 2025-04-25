@@ -1,8 +1,21 @@
+"use client";
+
 import Logo from "@/components/logo";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button, buttonVariants } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useCurrentUser } from "@/hooks/use-current-user";
+import { authClient } from "@/lib/auth-client";
 import Link from "next/link";
 
 const Header = () => {
+  const { user } = useCurrentUser();
+
   return (
     <header className="bg-transparent text-white py-2 sticky top-0 z-50">
       <div className="flex justify-between items-center">
@@ -79,14 +92,30 @@ const Header = () => {
                 Explore
               </Link>
             </li>
-            <Button variant="secondary">
-              <Link
-                href="/auth/sign-in"
-                className="hover:text-gray-200 transition-colors"
-              >
-                Sign In
-              </Link>
-            </Button>
+            {!!user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger>
+                  <Avatar>
+                    <AvatarImage src={user?.image || ""} />
+                    <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={() => authClient.signOut()}>
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button variant="secondary">
+                <Link
+                  href="/auth/sign-in"
+                  className="hover:text-gray-200 transition-colors"
+                >
+                  Sign In
+                </Link>
+              </Button>
+            )}
           </ul>
         </nav>
       </div>
