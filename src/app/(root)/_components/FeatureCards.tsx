@@ -20,6 +20,7 @@ const features = [
       "Report incidents without revealing your identity, promoting safety and trust.",
     background: "/image2.jpg",
     color: "from-blue-500/80",
+    link: "/report",
   },
   {
     title: "Geo Crime Mapping",
@@ -53,6 +54,7 @@ const features = [
       "Explore active communities in your area and connect with those making a difference.",
     background: "/image7.jpg",
     color: "from-yellow-400/80",
+    link: "/communities",
     
   },
   {

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { FaUserShield, FaDownload, FaAndroid, FaApple } from "react-icons/fa";
+import { FaUserShield, FaDownload, FaAndroid, FaApple, FaGavel, FaPen } from "react-icons/fa";
 
 const CTASignup = () => {
   return (
@@ -27,13 +27,12 @@ const CTASignup = () => {
             viewport={{ once: true }}
           >
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
-              Join <span className="text-blue-400">10,000+</span> Citizens
-              Making Pakistan Safer
+              Become A <span className="text-blue-400">Nigheban</span> To
+              Make Pakistan Safer
             </h2>
 
             <p className="text-gray-300 text-lg md:text-xl mb-8 max-w-2xl">
-              Download our app today and become part of the movement to create
-              safer communities across Pakistan.
+            Report a crime you witnessed or experienced — your voice could save a life.
             </p>
 
             <div className="flex flex-wrap gap-4 mb-10 justify-center lg:justify-start">
@@ -86,8 +85,8 @@ const CTASignup = () => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <FaAndroid size={20} />
-                <span>Download for Android</span>
+                <FaPen size={20} />
+                <span>Report Crime</span>
               </motion.a>
 
               <motion.a
@@ -99,8 +98,8 @@ const CTASignup = () => {
                 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <FaApple size={20} />
-                <span>Download for iOS</span>
+                <FaGavel size={20} />
+                <span>Book a lawyer</span>
               </motion.a>
             </div>
           </motion.div>
@@ -117,9 +116,9 @@ const CTASignup = () => {
               {/* Phone mockup */}
               <div className="relative z-20 mx-auto max-w-xs">
                 <div className="bg-black rounded-[3rem] p-3 border border-gray-800 shadow-2xl">
-                  {/* Screen content - Replace with your actual app screenshot */}
+                  
                   <div className="rounded-[2.5rem] overflow-hidden bg-gradient-to-b from-blue-900 to-black aspect-[9/19] relative">
-                    {/* This would be your app screenshot */}
+                   
                     <div className="absolute inset-0 flex flex-col">
                       <div className="h-1/5 bg-blue-900 flex items-center justify-center">
                         <div className="w-12 h-1 bg-white rounded-full"></div>
@@ -167,18 +166,19 @@ const CTASignup = () => {
               transition={{ duration: 1, delay: 0.6 }}
               viewport={{ once: true }}
             >
-              <div className="text-center">
-                <p className="text-blue-400 text-3xl font-bold">10K+</p>
-                <p className="text-gray-400 text-sm">Active Users</p>
-              </div>
-              <div className="text-center">
-                <p className="text-purple-400 text-3xl font-bold">24/7</p>
-                <p className="text-gray-400 text-sm">Support</p>
-              </div>
-              <div className="text-center">
-                <p className="text-green-400 text-3xl font-bold">5⭐</p>
-                <p className="text-gray-400 text-sm">Rated</p>
-              </div>
+             <div className="text-center">
+  <p className="text-blue-400 text-3xl font-bold">Report</p>
+  <p className="text-gray-400 text-sm">Your identity stays protected</p>
+</div>
+<div className="text-center">
+  <p className="text-purple-400 text-3xl font-bold">Empower</p>
+  <p className="text-gray-400 text-sm">Be the voice against injustice</p>
+</div>
+<div className="text-center">
+  <p className="text-green-400 text-3xl font-bold"> Alerts</p>
+  <p className="text-gray-400 text-sm">Stay informed. Stay safe.</p>
+</div>
+
             </motion.div>
           </motion.div>
         </div>
