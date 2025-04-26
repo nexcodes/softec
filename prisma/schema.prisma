@@ -113,6 +113,7 @@ model Crime {
   latitude     String
   longitude    String
   reportedAt   DateTime @default(now())
+  crimeType    String
   incidentDate DateTime
   isLive       Boolean
   isVerified   Boolean? @default(false)
