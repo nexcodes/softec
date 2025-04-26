@@ -12,8 +12,6 @@ export default function Home() {
       <FeatureCards />
       <LogoCarousel />
       <CTASignup />
-      <Footer />
-      
     </>
   );
 }

@@ -16,8 +16,16 @@ const app = new Hono()
     zValidator(
       "query",
       z.object({
-        page: z.number().positive().default(1),
-        limit: z.number().positive().default(10),
+        page: z
+          .string()
+          .regex(/^\d+$/)
+          .default("1")
+          .transform((val) => Number(val)),
+        limit: z
+          .string()
+          .regex(/^\d+$/)
+          .default("10")
+          .transform((val) => Number(val)),
       })
     ),
     async (c) => {
