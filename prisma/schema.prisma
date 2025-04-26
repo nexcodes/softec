@@ -41,7 +41,7 @@ model Session {
   id        String   @id
   expiresAt DateTime
   token     String
-  role      Role @default(USER)
+  role      Role     @default(USER)
   createdAt DateTime
   updatedAt DateTime
   ipAddress String?
@@ -104,16 +104,20 @@ model Lawyer {
 }
 
 model Crime {
-  id          String   @id @default(cuid())
-  userId      String?
-  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  title       String
-  description String
-  location    String
-  isLive      Boolean
-  isVerified  Boolean? @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String   @id @default(cuid())
+  userId       String?
+  user         User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title        String
+  description  String
+  location     String
+  latitude     String
+  longitude    String
+  reportedAt   DateTime @default(now())
+  incidentDate DateTime
+  isLive       Boolean
+  isVerified   Boolean? @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   // Relations
   media    Media[]
