@@ -2,8 +2,12 @@ import { client } from "@/lib/hono";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { InferResponseType } from "hono";
 
-type CreateLawyerResponse = InferResponseType<typeof client.api.lawyer.lawyer.profile["$post"]>;
-type CreateLawyerParams = Parameters<typeof client.api.lawyer.lawyer.profile["$post"]>[0]["json"];
+type CreateLawyerResponse = InferResponseType<
+  (typeof client.api.lawyer.lawyer.profile)["$post"]
+>;
+type CreateLawyerParams = Parameters<
+  (typeof client.api.lawyer.lawyer.profile)["$post"]
+>[0]["json"];
 
 export const useCreateLawyerProfile = () => {
   const queryClient = useQueryClient();
@@ -11,7 +15,7 @@ export const useCreateLawyerProfile = () => {
   return useMutation<CreateLawyerResponse, Error, CreateLawyerParams>({
     mutationFn: async (data) => {
       const response = await client.api.lawyer.lawyer.profile.$post({
-        json: data
+        json: data,
       });
 
       if (!response.ok) {

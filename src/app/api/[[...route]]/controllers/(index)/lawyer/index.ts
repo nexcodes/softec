@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth"; // Import the auth instance
+import { currentUser } from "@/lib/current-user";
 import { db } from "@/lib/db";
 import {
   createLawyerSchema,
@@ -8,15 +8,20 @@ import {
 } from "@/schema";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
+import { z } from "zod";
 
 const app = new Hono()
-  .get("/", async (c) => {
-    try {
-      let page = Number(c.req.query("page")) || 1;
-      let limit = Number(c.req.query("limit")) || 10;
-
-      if (page < 1) page = 1;
-      if (limit < 1 || limit > 100) limit = 10;
+  .get(
+    "/",
+    zValidator(
+      "query",
+      z.object({
+        page: z.number().positive().default(1),
+        limit: z.number().positive().default(10),
+      })
+    ),
+    async (c) => {
+      const { page, limit } = c.req.valid("query");
 
       const skip = (page - 1) * limit;
 
@@ -35,7 +40,6 @@ const app = new Hono()
         return c.json(
           {
             message: "No verified lawyers found.",
-            status: 200,
             data: [],
             metadata: {
               page,
@@ -49,7 +53,6 @@ const app = new Hono()
       }
       return c.json({
         message: "Verified lawyers retrieved successfully.",
-        status: 200,
         data: lawyers,
         metadata: {
           page,
@@ -58,42 +61,19 @@ const app = new Hono()
           totalLawyers,
         },
       });
-    } catch (error) {
-      console.error("Error fetching lawyers:", error);
-      return c.json(
-        {
-          message: "An error occurred while fetching lawyers.",
-          error: error instanceof Error ? error.message : "Unknown error",
-        },
-        500
-      );
     }
-  })
-
+  )
   .post(
     "/lawyer/profile",
     zValidator("json", createLawyerSchema),
     async (c) => {
-      const session = await auth.api.getSession({ headers: c.req.raw.headers });
-
+      const user = await currentUser();
       // Ensure the user is authenticated
-      if (!session || !session.user) {
+      if (!user || !user.id) {
         return c.json({ error: "Unauthorized" }, 401);
       }
 
-      const user = session.user;
       const data = await c.req.valid("json");
-
-      // Check if the user's email is verified
-      if (!user.emailVerified) {
-        return c.json(
-          {
-            error:
-              "Email not verified. Please verify your email before proceeding.",
-          },
-          400
-        );
-      }
 
       // Check if the user already has a lawyer profile
       const existingLawyer = await db.lawyer.findUnique({
@@ -137,16 +117,13 @@ const app = new Hono()
       return c.json({ error: "Forbidden for your role" }, 403);
     }
   )
-
   .put("/lawyer/profile", zValidator("json", updateLawyerSchema), async (c) => {
-    const session = await auth.api.getSession({ headers: c.req.raw.headers });
-
+    const user = await currentUser();
     // Ensure the user is authenticated
-    if (!session || !session.user) {
+    if (!user || !user.id) {
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    const user = session.user;
     const data = await c.req.valid("json");
 
     // Check if the user is a Lawyer
@@ -175,73 +152,52 @@ const app = new Hono()
         licenseNo: data.licenseNo ?? existingLawyer.licenseNo,
         fatherName: data.fatherName ?? existingLawyer.fatherName,
         cnic: data.cnic ?? existingLawyer.cnic,
-        isVerified: data.isVerified ?? existingLawyer.isVerified,
-        updatedAt: new Date(), // Ensure the profile update timestamp is set
       },
     });
 
     // Return a success message along with the updated data
     return c.json({ message: "Lawyer profile updated", data: updated });
   })
-
-  .delete("/lawyers/:id", zValidator("param", idParamSchema), async (c) => {
-    const id = c.req.valid("param").id;
-
-    try {
-      const existing = await db.lawyer.findUnique({ where: { id } });
-
-      if (!existing) {
-        return c.json({ message: "Lawyer not found." }, 406);
-      }
-
-      await db.lawyer.delete({ where: { id } });
-
-      return c.json({
-        message: "Lawyer deleted successfully.",
-        status: 200,
-      });
-    } catch (error) {
-      return c.json(
-        {
-          message: "Failed to delete lawyer.",
-          error: error instanceof Error ? error.message : "Unknown error",
-        },
-        500
-      );
+  .delete("/lawyers", async (c) => {
+    const user = await currentUser();
+    // Ensure the user is authenticated
+    if (!user || !user.id) {
+      return c.json({ error: "Unauthorized" }, 401);
     }
-  })
 
+    const existing = await db.lawyer.findUnique({
+      where: { userId: user.id },
+    });
+
+    if (!existing) {
+      return c.json({ message: "Lawyer not found." }, 404);
+    }
+
+    await db.lawyer.delete({ where: { userId: user.id } });
+
+    return c.json({
+      message: "Lawyer deleted successfully.",
+    });
+  })
   .get("/lawyers/:id", zValidator("param", idParamSchema), async (c) => {
-    const id = c.req.valid("param").id;
+    const { id } = c.req.valid("param");
 
-    try {
-      const lawyer = await db.lawyer.findUnique({
-        where: { id },
-        include: {
-          user: true,
-        },
-      });
+    const lawyer = await db.lawyer.findUnique({
+      where: { id },
+      include: {
+        user: true,
+      },
+    });
 
-      if (!lawyer) {
-        return c.json({ message: "Lawyer not found." }, 404);
-      }
-
-      return c.json({
-        message: "Lawyer retrieved successfully.",
-        data: lawyer,
-        status: 200,
-      });
-    } catch (error) {
-      return c.json(
-        {
-          message: "Failed to fetch lawyer.",
-          error: error instanceof Error ? error.message : "Unknown error",
-        },
-        500
-      );
+    if (!lawyer) {
+      return c.json({ message: "Lawyer not found." }, 404);
     }
-  })
 
+    return c.json({
+      message: "Lawyer retrieved successfully.",
+      data: lawyer,
+    });
+  })
   .get(
     "/lawyers/search",
     zValidator("query", getLawyersBySpecializationSchema),
@@ -250,48 +206,37 @@ const app = new Hono()
 
       const skip = (page - 1) * limit;
 
-      try {
-        const results = await db.lawyer.findMany({
-          where: {
-            isVerified: true,
-            OR: [
-              { legalName: { contains: specialization, mode: "insensitive" } },
-              {
-                specialization: {
-                  contains: specialization,
-                  mode: "insensitive",
-                },
+      const results = await db.lawyer.findMany({
+        where: {
+          isVerified: true,
+          OR: [
+            { legalName: { contains: specialization, mode: "insensitive" } },
+            {
+              specialization: {
+                contains: specialization,
+                mode: "insensitive",
               },
-            ],
-          },
-          include: {
-            user: true,
-          },
-          orderBy: {
-            legalName: "asc",
-          },
-          skip,
-          take: limit,
-        });
+            },
+          ],
+        },
+        include: {
+          user: true,
+        },
+        orderBy: {
+          legalName: "asc",
+        },
+        skip,
+        take: limit,
+      });
 
-        return c.json({
-          message: `Search results for "${specialization}"`,
-          data: results,
-          pagination: {
-            page,
-            limit,
-          },
-          status: 200,
-        });
-      } catch (error) {
-        return c.json(
-          {
-            message: "Failed to search lawyers.",
-            error: error instanceof Error ? error.message : "Unknown error",
-          },
-          500
-        );
-      }
+      return c.json({
+        message: `Search results for "${specialization}"`,
+        data: results,
+        pagination: {
+          page,
+          limit,
+        },
+      });
     }
   );
 

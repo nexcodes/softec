@@ -13,8 +13,6 @@ export const updateCrimeSchema = z.object({
   title: z.string().min(1, "Title is required").optional(),
   description: z.string().min(1, "Description is required").optional(),
   location: z.string().min(1, "Location is required").optional(),
-  isLive: z.boolean().optional(),
-  isVerified: z.boolean().optional(),
 });
 
 export const searchCrimeSchema = z.object({
@@ -65,7 +63,6 @@ export const updateLawyerSchema = z.object({
   licenseNo: z.string().min(1, "License number is required").optional(),
   fatherName: z.string().min(1, "Father's name is required").optional(),
   cnic: z.string().min(1, "CNIC is required").optional(),
-  isVerified: z.boolean().optional(),
 });
 
 export const getLawyersBySpecializationSchema = z.object({

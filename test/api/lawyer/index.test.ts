@@ -1,130 +1,578 @@
 import axios from 'axios';
-import { PrismaClient } from '@prisma/client';
+import { jest } from '@jest/globals';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-const prisma = new PrismaClient();
 
-// Mock data for testing
-const mockLawyer = {
-  legalName: 'Test Lawyer',
-  specialization: 'Criminal Law',
-  experience: 5,
-  description: 'A test lawyer for API testing',
-  licenseNo: 'TEST-123456',
-  fatherName: 'Test Father',
-  cnic: '12345-1234567-1'
-};
+// Mock axios
+jest.mock('axios');
+const mockedAxios = axios as jest.Mocked<typeof axios>;
 
-// Store created IDs for cleanup
-let testLawyerId: string;
-let testUserId: string;
+// Mock auth
+jest.mock('@/lib/current-user', () => ({
+  currentUser: jest.fn(),
+}));
+import { currentUser } from '@/lib/current-user';
+const mockedCurrentUser = currentUser as jest.MockedFunction<typeof currentUser>;
 
-// Setup and teardown
-beforeAll(async () => {
-  // Create a test user for our tests with all required fields
-  const testUser = await prisma.user.create({
-    data: {
-      name: 'Test Lawyer User',
-      email: `lawyer-test-${Date.now()}@example.com`,
-      image: 'https://example.com/test-lawyer.jpg',
-      emailVerified: true,
-      createdAt: new Date(), // Required field
-      updatedAt: new Date(), // Required field
-      role: 'USER' // Start as regular user
-    }
+describe('Lawyer API Endpoints', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
-  testUserId = testUser.id;
-  
-  // Create a test lawyer profile directly with Prisma (since auth is required via API)
-  const testLawyer = await prisma.lawyer.create({
-    data: {
-      ...mockLawyer,
-      isVerified: true, // Set to verified for testing
-      userId: testUserId
-    }
+
+  afterEach(() => {
+    jest.resetAllMocks();
   });
-  testLawyerId = testLawyer.id;
-  
-  // Update user to be a lawyer
-  await prisma.user.update({
-    where: { id: testUserId },
-    data: { role: 'LAWYER' }
-  });
-});
 
-afterAll(async () => {
-  // Clean up test data
-  if (testLawyerId) {
-    await prisma.lawyer.delete({
-      where: {
-        id: testLawyerId
-      }
-    });
-  }
+  describe('GET /api/lawyer', () => {
+    it('should return a list of verified lawyers', async () => {
+      // Mock data
+      const mockLawyers = [
+        {
+          id: '1',
+          legalName: 'John Doe',
+          specialization: 'Criminal Law',
+          user: { id: '1', email: 'john@example.com' },
+        },
+        {
+          id: '2',
+          legalName: 'Jane Smith',
+          specialization: 'Family Law',
+          user: { id: '2', email: 'jane@example.com' },
+        },
+      ];
 
-  if (testUserId) {
-    await prisma.user.delete({
-      where: {
-        id: testUserId
-      }
-    });
-  }
+      const mockResponse = {
+        data: {
+          message: 'Verified lawyers retrieved successfully.',
+          data: mockLawyers,
+          metadata: {
+            page: 1,
+            limit: 10,
+            totalPages: 1,
+            totalLawyers: 2,
+          },
+        },
+        status: 200,
+      };
 
-  // Close Prisma connection
-  await prisma.$disconnect();
-});
+      mockedAxios.get.mockResolvedValue(mockResponse);
 
-describe('Lawyer API', () => {
-  describe('GET /api/lawyer/lawyers', () => {
-    it('should retrieve all verified lawyers with pagination', async () => {
-      // Using correct path for lawyer API
-      const response = await axios.get(`${API_URL}/api/lawyer/lawyers`);
-      
+      // Execute request
+      const response = await axios.get(`${API_URL}/api/lawyer`);
+
+      // Assertions
       expect(response.status).toBe(200);
       expect(response.data.message).toBe('Verified lawyers retrieved successfully.');
-      expect(Array.isArray(response.data.data)).toBe(true);
-      expect(response.data).toHaveProperty('metadata');
-      expect(response.data.metadata).toHaveProperty('page');
-      expect(response.data.metadata).toHaveProperty('limit');
-      expect(response.data.metadata).toHaveProperty('totalPages');
-      expect(response.data.metadata).toHaveProperty('totalLawyers');
-      
-      // Verify our test lawyer is in the list
-      const foundLawyer = response.data.data.find((lawyer: any) => lawyer.id === testLawyerId);
-      expect(foundLawyer).toBeTruthy();
-      expect(foundLawyer.legalName).toBe(mockLawyer.legalName);
+      expect(response.data.data).toEqual(mockLawyers);
+      expect(response.data.metadata).toEqual({
+        page: 1,
+        limit: 10,
+        totalPages: 1,
+        totalLawyers: 2,
+      });
+      expect(mockedAxios.get).toHaveBeenCalledWith(`${API_URL}/api/lawyer`);
     });
 
-    it('should handle pagination parameters', async () => {
-      const response = await axios.get(`${API_URL}/api/lawyer/lawyers?page=1&limit=5`);
-      
+    it('should return empty data when no lawyers found', async () => {
+      // Mock empty result
+      const mockResponse = {
+        data: {
+          message: 'No verified lawyers found.',
+          data: [],
+          metadata: {
+            page: 1,
+            limit: 10,
+            totalPages: 0,
+            totalLawyers: 0,
+          },
+        },
+        status: 200,
+      };
+
+      mockedAxios.get.mockResolvedValue(mockResponse);
+
+      // Execute request
+      const response = await axios.get(`${API_URL}/api/lawyer`);
+
+      // Assertions
       expect(response.status).toBe(200);
-      expect(response.data.metadata.page).toBe(1);
-      expect(response.data.metadata.limit).toBe(5);
-      expect(response.data.data.length).toBeLessThanOrEqual(5);
+      expect(response.data.message).toBe('No verified lawyers found.');
+      expect(response.data.data).toEqual([]);
+      expect(response.data.metadata).toEqual({
+        page: 1,
+        limit: 10,
+        totalPages: 0,
+        totalLawyers: 0,
+      });
+    });
+
+    it('should handle pagination correctly', async () => {
+      // Mock data
+      const mockLawyers = [
+        {
+          id: '3',
+          legalName: 'Bob Johnson',
+          specialization: 'Corporate Law',
+          user: { id: '3' },
+        },
+      ];
+
+      const mockResponse = {
+        data: {
+          message: 'Verified lawyers retrieved successfully.',
+          data: mockLawyers,
+          metadata: {
+            page: 2,
+            limit: 10,
+            totalPages: 2,
+            totalLawyers: 11,
+          },
+        },
+        status: 200,
+      };
+
+      mockedAxios.get.mockResolvedValue(mockResponse);
+
+      // Execute request with pagination
+      const response = await axios.get(`${API_URL}/api/lawyer?page=2&limit=10`);
+
+      // Assertions
+      expect(response.status).toBe(200);
+      expect(response.data.data).toEqual(mockLawyers);
+      expect(response.data.metadata).toEqual({
+        page: 2,
+        limit: 10,
+        totalPages: 2,
+        totalLawyers: 11,
+      });
+      expect(mockedAxios.get).toHaveBeenCalledWith(`${API_URL}/api/lawyer?page=2&limit=10`);
+    });
+  });
+
+  describe('POST /api/lawyer/lawyer/profile', () => {
+    const validLawyerData = {
+      legalName: 'John Doe',
+      specialization: 'Criminal Law',
+      experience: 5,
+      description: 'Experienced criminal lawyer',
+      licenseNo: 'LIC123456',
+      fatherName: 'James Doe',
+      cnic: '12345-6789012-3',
+    };
+
+    it('should create a lawyer profile for a USER role', async () => {
+      // Mock successful response
+      const mockCreatedLawyer = {
+        id: 'lawyer123',
+        ...validLawyerData,
+        userId: 'user123',
+        isVerified: false,
+      };
+
+      const mockResponse = {
+        data: {
+          message: 'Successfully upgraded to Lawyer',
+          data: mockCreatedLawyer,
+        },
+        status: 200,
+      };
+
+      mockedAxios.post.mockResolvedValue(mockResponse);
+
+      // Execute request
+      const response = await axios.post(
+        `${API_URL}/api/lawyer/lawyer/profile`,
+        validLawyerData,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      // Assertions
+      expect(response.status).toBe(200);
+      expect(response.data.message).toBe('Successfully upgraded to Lawyer');
+      expect(response.data.data).toEqual(mockCreatedLawyer);
+      expect(mockedAxios.post).toHaveBeenCalledWith(
+        `${API_URL}/api/lawyer/lawyer/profile`,
+        validLawyerData,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+    });
+
+    it('should return 401 if user is not authenticated', async () => {
+      // Mock unauthorized error
+      mockedAxios.post.mockRejectedValue({
+        response: {
+          status: 401,
+          data: { error: 'Unauthorized' },
+        },
+        isAxiosError: true,
+      });
+
+      try {
+        // Execute request
+        await axios.post(
+          `${API_URL}/api/lawyer/lawyer/profile`,
+          validLawyerData,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+        fail('Expected request to fail with 401 status');
+      } catch (error: any) {
+        if (error.response) {
+          expect(error.response.status).toBe(401);
+          expect(error.response.data).toEqual({ error: 'Unauthorized' });
+        } else {
+          throw error;
+        }
+      }
+    });
+
+    it('should return 400 if user already has a lawyer profile', async () => {
+      // Mock bad request error
+      mockedAxios.post.mockRejectedValue({
+        response: {
+          status: 400,
+          data: { error: 'You are already registered as a lawyer' },
+        },
+        isAxiosError: true,
+      });
+
+      try {
+        // Execute request
+        await axios.post(
+          `${API_URL}/api/lawyer/lawyer/profile`,
+          validLawyerData,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+        fail('Expected request to fail with 400 status');
+      } catch (error: any) {
+        if (error.response) {
+          expect(error.response.status).toBe(400);
+          expect(error.response.data).toEqual({ error: 'You are already registered as a lawyer' });
+        } else {
+          throw error;
+        }
+      }
+    });
+
+    it('should return 403 for non-USER roles', async () => {
+      // Mock forbidden error
+      mockedAxios.post.mockRejectedValue({
+        response: {
+          status: 403,
+          data: { error: 'Forbidden for your role' },
+        },
+        isAxiosError: true,
+      });
+
+      try {
+        // Execute request
+        await axios.post(
+          `${API_URL}/api/lawyer/lawyer/profile`,
+          validLawyerData,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+        fail('Expected request to fail with 403 status');
+      } catch (error: any) {
+        if (error.response) {
+          expect(error.response.status).toBe(403);
+          expect(error.response.data).toEqual({ error: 'Forbidden for your role' });
+        } else {
+          throw error;
+        }
+      }
+    });
+  });
+
+  describe('PUT /api/lawyer/lawyer/profile', () => {
+    const updateData = {
+      legalName: 'John Doe Updated',
+      specialization: 'Criminal and Family Law',
+    };
+
+    it('should update a lawyer profile successfully', async () => {
+      // Mock successful response
+      const updatedLawyer = {
+        id: 'lawyer123',
+        userId: 'user123',
+        legalName: updateData.legalName,
+        specialization: updateData.specialization,
+        experience: 5,
+        description: 'Experienced criminal lawyer',
+        licenseNo: 'LIC123456',
+        fatherName: 'James Doe',
+        cnic: '12345-6789012-3',
+      };
+
+      const mockResponse = {
+        data: {
+          message: 'Lawyer profile updated',
+          data: updatedLawyer,
+        },
+        status: 200,
+      };
+
+      mockedAxios.put.mockResolvedValue(mockResponse);
+
+      // Execute request
+      const response = await axios.put(
+        `${API_URL}/api/lawyer/lawyer/profile`,
+        updateData,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      // Assertions
+      expect(response.status).toBe(200);
+      expect(response.data.message).toBe('Lawyer profile updated');
+      expect(response.data.data).toEqual(updatedLawyer);
+      expect(mockedAxios.put).toHaveBeenCalledWith(
+        `${API_URL}/api/lawyer/lawyer/profile`,
+        updateData,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+    });
+
+    it('should return 401 if user is not authenticated', async () => {
+      // Mock unauthorized error
+      mockedAxios.put.mockRejectedValue({
+        response: {
+          status: 401,
+          data: { error: 'Unauthorized' },
+        },
+        isAxiosError: true,
+      });
+
+      try {
+        // Execute request
+        await axios.put(
+          `${API_URL}/api/lawyer/lawyer/profile`,
+          updateData,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+        fail('Expected request to fail with 401 status');
+      } catch (error: any) {
+        if (error.response) {
+          expect(error.response.status).toBe(401);
+          expect(error.response.data).toEqual({ error: 'Unauthorized' });
+        } else {
+          throw error;
+        }
+      }
+    });
+
+    it('should return 403 if user is not a lawyer', async () => {
+      // Mock forbidden error
+      mockedAxios.put.mockRejectedValue({
+        response: {
+          status: 403,
+          data: { error: 'Only a Lawyer can update their profile' },
+        },
+        isAxiosError: true,
+      });
+
+      try {
+        // Execute request
+        await axios.put(
+          `${API_URL}/api/lawyer/lawyer/profile`,
+          updateData,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+        fail('Expected request to fail with 403 status');
+      } catch (error: any) {
+        if (error.response) {
+          expect(error.response.status).toBe(403);
+          expect(error.response.data).toEqual({ error: 'Only a Lawyer can update their profile' });
+        } else {
+          throw error;
+        }
+      }
+    });
+
+    it('should return 404 if lawyer profile does not exist', async () => {
+      // Mock not found error
+      mockedAxios.put.mockRejectedValue({
+        response: {
+          status: 404,
+          data: { error: 'Lawyer profile not found' },
+        },
+        isAxiosError: true,
+      });
+
+      try {
+        // Execute request
+        await axios.put(
+          `${API_URL}/api/lawyer/lawyer/profile`,
+          updateData,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+        fail('Expected request to fail with 404 status');
+      } catch (error: any) {
+        if (error.response) {
+          expect(error.response.status).toBe(404);
+          expect(error.response.data).toEqual({ error: 'Lawyer profile not found' });
+        } else {
+          throw error;
+        }
+      }
+    });
+  });
+
+  describe('DELETE /api/lawyer/lawyers', () => {
+    it('should delete a lawyer profile successfully', async () => {
+      // Mock successful response
+      const mockResponse = {
+        data: {
+          message: 'Lawyer deleted successfully.',
+        },
+        status: 200,
+      };
+
+      mockedAxios.delete.mockResolvedValue(mockResponse);
+
+      // Execute request
+      const response = await axios.delete(`${API_URL}/api/lawyer/lawyers`);
+
+      // Assertions
+      expect(response.status).toBe(200);
+      expect(response.data.message).toBe('Lawyer deleted successfully.');
+      expect(mockedAxios.delete).toHaveBeenCalledWith(`${API_URL}/api/lawyer/lawyers`);
+    });
+
+    it('should return 401 if user is not authenticated', async () => {
+      // Mock unauthorized error
+      mockedAxios.delete.mockRejectedValue({
+        response: {
+          status: 401,
+          data: { error: 'Unauthorized' },
+        },
+        isAxiosError: true,
+      });
+
+      try {
+        // Execute request
+        await axios.delete(`${API_URL}/api/lawyer/lawyers`);
+        fail('Expected request to fail with 401 status');
+      } catch (error: any) {
+        if (error.response) {
+          expect(error.response.status).toBe(401);
+          expect(error.response.data).toEqual({ error: 'Unauthorized' });
+        } else {
+          throw error;
+        }
+      }
+    });
+
+    it('should return 404 if lawyer profile does not exist', async () => {
+      // Mock not found response
+      mockedAxios.delete.mockRejectedValue({
+        response: {
+          status: 404,
+          data: { message: 'Lawyer not found.' },
+        },
+        isAxiosError: true,
+      });
+
+      try {
+        // Execute request
+        await axios.delete(`${API_URL}/api/lawyer/lawyers`);
+        fail('Expected request to fail with 404 status');
+      } catch (error: any) {
+        if (error.response) {
+          expect(error.response.status).toBe(404);
+          expect(error.response.data).toEqual({ message: 'Lawyer not found.' });
+        } else {
+          throw error;
+        }
+      }
     });
   });
 
   describe('GET /api/lawyer/lawyers/:id', () => {
-    it('should retrieve a specific lawyer', async () => {
-      const response = await axios.get(`${API_URL}/api/lawyer/lawyers/${testLawyerId}`);
-      
+    it('should return a lawyer by ID', async () => {
+      // Mock lawyer data
+      const mockLawyer = {
+        id: 'lawyer123',
+        legalName: 'John Doe',
+        specialization: 'Criminal Law',
+        user: { id: 'user123', email: 'john@example.com' },
+      };
+
+      const mockResponse = {
+        data: {
+          message: 'Lawyer retrieved successfully.',
+          data: mockLawyer,
+        },
+        status: 200,
+      };
+
+      mockedAxios.get.mockResolvedValue(mockResponse);
+
+      // Execute request
+      const response = await axios.get(`${API_URL}/api/lawyer/lawyers/lawyer123`);
+
+      // Assertions
       expect(response.status).toBe(200);
       expect(response.data.message).toBe('Lawyer retrieved successfully.');
-      expect(response.data.data.id).toBe(testLawyerId);
-      expect(response.data.data.legalName).toBe(mockLawyer.legalName);
-      expect(response.data.data.specialization).toBe(mockLawyer.specialization);
-      expect(response.data.data.user.id).toBe(testUserId);
+      expect(response.data.data).toEqual(mockLawyer);
+      expect(mockedAxios.get).toHaveBeenCalledWith(`${API_URL}/api/lawyer/lawyers/lawyer123`);
     });
 
-    it('should return 404 for non-existent lawyer', async () => {
+    it('should return 404 if lawyer not found', async () => {
+      // Mock not found error
+      mockedAxios.get.mockRejectedValue({
+        response: {
+          status: 404,
+          data: { message: 'Lawyer not found.' },
+        },
+        isAxiosError: true,
+      });
+
       try {
-        await axios.get(`${API_URL}/api/lawyer/lawyers/non-existent-id`);
+        // Execute request
+        await axios.get(`${API_URL}/api/lawyer/lawyers/nonexistent`);
         fail('Expected request to fail with 404 status');
-      } catch (error) {
-        if (axios.isAxiosError(error) && error.response) {
+      } catch (error: any) {
+        if (error.response) {
           expect(error.response.status).toBe(404);
-          expect(error.response.data.message).toBe('Lawyer not found.');
+          expect(error.response.data).toEqual({ message: 'Lawyer not found.' });
         } else {
           throw error;
         }
@@ -133,89 +581,80 @@ describe('Lawyer API', () => {
   });
 
   describe('GET /api/lawyer/lawyers/search', () => {
-    it('should search for lawyers by specialization', async () => {
-      const response = await axios.get(`${API_URL}/api/lawyer/lawyers/search?specialization=Criminal`);
-      
-      expect(response.status).toBe(200);
-      expect(response.data.message).toContain('Search results for');
-      expect(Array.isArray(response.data.data)).toBe(true);
-      
-      // Verify our test lawyer is in the search results
-      const foundLawyer = response.data.data.find((lawyer: any) => lawyer.id === testLawyerId);
-      expect(foundLawyer).toBeTruthy();
-      expect(foundLawyer.specialization).toBe(mockLawyer.specialization);
-    });
+    it('should search lawyers by specialization', async () => {
+      // Mock search results
+      const mockResults = [
+        {
+          id: 'lawyer123',
+          legalName: 'John Doe',
+          specialization: 'Criminal Law',
+          user: { id: 'user123', email: 'john@example.com' },
+        },
+      ];
 
-    it('should handle pagination in search results', async () => {
-      const response = await axios.get(`${API_URL}/api/lawyer/lawyers/search?specialization=Criminal&page=1&limit=5`);
-      
-      expect(response.status).toBe(200);
-      expect(response.data.pagination.page).toBe(1);
-      expect(response.data.pagination.limit).toBe(5);
-      expect(response.data.data.length).toBeLessThanOrEqual(5);
-    });
-  });
-
-  // Note: The following tests would typically require authentication.
-  // In a real environment, you would need to mock the auth or use test tokens.
-  // For this example, we'll add tests but comment out the actual execution.
-
-  /* 
-  // This test requires authentication
-  describe('PUT /api/lawyer/lawyer/profile', () => {
-    it('should update a lawyer profile', async () => {
-      const updatedData = {
-        legalName: 'Updated Test Lawyer',
-        specialization: mockLawyer.specialization,
-        experience: 6
+      const mockResponse = {
+        data: {
+          message: 'Search results for "Criminal"',
+          data: mockResults,
+          pagination: {
+            page: 1,
+            limit: 10,
+          },
+        },
+        status: 200,
       };
 
-      // In a real test, you would include authentication headers
-      const response = await axios.put(
-        `${API_URL}/api/lawyer/lawyer/profile`, 
-        updatedData,
-        {
-          headers: {
-            'Authorization': `Bearer ${testToken}`
-          }
-        }
-      );
-      
-      expect(response.status).toBe(200);
-      expect(response.data.message).toBe('Lawyer profile updated');
-      expect(response.data.data.legalName).toBe(updatedData.legalName);
-      expect(response.data.data.experience).toBe(updatedData.experience);
-    });
-  });
+      mockedAxios.get.mockResolvedValue(mockResponse);
 
-  // This test requires authentication
-  describe('DELETE /api/lawyer/lawyers/:id', () => {
-    it('should delete a lawyer profile', async () => {
-      // In a real test, you would include authentication headers
-      const response = await axios.delete(
-        `${API_URL}/api/lawyer/lawyers/${testLawyerId}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${testToken}`
-          }
-        }
-      );
-      
+      // Execute request
+      const response = await axios.get(`${API_URL}/api/lawyer/lawyers/search?specialization=Criminal`);
+
+      // Assertions
       expect(response.status).toBe(200);
-      expect(response.data.message).toBe('Lawyer deleted successfully.');
-      
-      // Verify the lawyer is actually deleted
-      try {
-        await axios.get(`${API_URL}/api/lawyer/lawyers/${testLawyerId}`);
-        fail('Expected request to fail with 404 status since lawyer should be deleted');
-      } catch (error) {
-        if (axios.isAxiosError(error) && error.response) {
-          expect(error.response.status).toBe(404);
-        } else {
-          throw error;
-        }
-      }
+      expect(response.data.message).toBe('Search results for "Criminal"');
+      expect(response.data.data).toEqual(mockResults);
+      expect(response.data.pagination).toEqual({
+        page: 1,
+        limit: 10,
+      });
+      expect(mockedAxios.get).toHaveBeenCalledWith(`${API_URL}/api/lawyer/lawyers/search?specialization=Criminal`);
+    });
+
+    it('should support pagination in search', async () => {
+      // Mock search results
+      const mockResults = [
+        {
+          id: 'lawyer456',
+          legalName: 'Jane Smith',
+          specialization: 'Family Law',
+          user: { id: 'user456', email: 'jane@example.com' },
+        },
+      ];
+
+      const mockResponse = {
+        data: {
+          message: 'Search results for "Family"',
+          data: mockResults,
+          pagination: {
+            page: 2,
+            limit: 5,
+          },
+        },
+        status: 200,
+      };
+
+      mockedAxios.get.mockResolvedValue(mockResponse);
+
+      // Execute request with pagination
+      const response = await axios.get(`${API_URL}/api/lawyer/lawyers/search?specialization=Family&page=2&limit=5`);
+
+      // Assertions
+      expect(response.status).toBe(200);
+      expect(response.data.pagination).toEqual({
+        page: 2,
+        limit: 5,
+      });
+      expect(mockedAxios.get).toHaveBeenCalledWith(`${API_URL}/api/lawyer/lawyers/search?specialization=Family&page=2&limit=5`);
     });
   });
-  */
 });

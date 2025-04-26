@@ -2,7 +2,7 @@ import { client } from "@/lib/hono";
 import { useQuery } from "@tanstack/react-query";
 import { InferResponseType } from "hono";
 
-type LawyersResponse = InferResponseType<typeof client.api.lawyer["$get"]>;
+type LawyersResponse = InferResponseType<(typeof client.api.lawyer)["$get"]>;
 
 interface PaginationParams {
   page?: number;
@@ -23,7 +23,7 @@ export const useGetLawyers = (params: PaginationParams = {}) => {
         throw new Error("Failed to fetch lawyers");
       }
 
-      const data = await response.json() as LawyersResponse;
+      const { data } = await response.json();
       return data;
     },
   });

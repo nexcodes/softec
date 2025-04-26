@@ -2,23 +2,22 @@ import { client } from "@/lib/hono";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { InferResponseType } from "hono";
 
-type DeleteLawyerResponse = InferResponseType<typeof client.api.lawyer.lawyers[":id"]["$delete"]>;
+type DeleteLawyerResponse = InferResponseType<
+  typeof client.api.lawyer.lawyers.$delete
+>;
 
 export const useDeleteLawyer = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<DeleteLawyerResponse, Error, string>({
-    mutationFn: async (lawyerId) => {
-      const response = await client.api.lawyer.lawyers[":id"].$delete({
-        param: { id: lawyerId }
-      });
+  return useMutation<DeleteLawyerResponse, Error>({
+    mutationFn: async () => {
+      const response = await client.api.lawyer.lawyers.$delete();
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to delete lawyer");
+        throw new Error("Failed to delete lawyer");
       }
 
-      return response.json();
+      return await response.json();
     },
     onSuccess: () => {
       // Invalidate lawyers list query
