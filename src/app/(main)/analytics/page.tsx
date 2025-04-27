@@ -4,14 +4,14 @@ import type React from 'react';
 
 // pages/crime-map.tsx
 import useLocation from '@/hooks/use-location';
+import { CrimeType } from '@prisma/client';
 import {
   GoogleMap,
   InfoWindow,
   LoadScript,
   Marker,
 } from '@react-google-maps/api';
-import Head from 'next/head';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Area,
   AreaChart,
@@ -29,180 +29,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-
-// Define the Crime Type enum
-enum CrimeType {
-  HOMICIDE = 'HOMICIDE',
-  ASSAULT = 'ASSAULT',
-  THEFT = 'THEFT',
-  ROBBERY = 'ROBBERY',
-  BURGLARY = 'BURGLARY',
-  ARSON = 'ARSON',
-  VANDALISM = 'VANDALISM',
-  FRAUD = 'FRAUD',
-  EMBEZZLEMENT = 'EMBEZZLEMENT',
-  KIDNAPPING = 'KIDNAPPING',
-  CYBERCRIME = 'CYBERCRIME',
-  DRUG_TRAFFICKING = 'DRUG_TRAFFICKING',
-  RAPE = 'RAPE',
-}
-
-// Type definition for our Crime data
-interface Crime {
-  id: string;
-  location: string;
-  latitude: number;
-  longitude: number;
-  crimeType: CrimeType;
-  reportedAt?: Date;
-  description?: string;
-}
-
-// Interface for chart data
-interface ChartData {
-  name: string;
-  value: number;
-  color: string;
-}
-
-// Mock data based on the Crime model fields you selected
-const mockCrimeData: Crime[] = [
-  {
-    id: '1',
-    location: 'Downtown Park',
-    latitude: 37.7749,
-    longitude: -122.4194,
-    crimeType: CrimeType.THEFT,
-    reportedAt: new Date('2025-04-10T14:30:00'),
-    description: 'Bicycle theft from the north side of the park',
-  },
-  {
-    id: '2',
-    location: 'Main Street Mall',
-    latitude: 37.7833,
-    longitude: -122.4167,
-    crimeType: CrimeType.ASSAULT,
-    reportedAt: new Date('2025-04-15T20:15:00'),
-    description: 'Physical altercation outside the food court',
-  },
-  {
-    id: '3',
-    location: 'City Center',
-    latitude: 37.7694,
-    longitude: -122.4248,
-    crimeType: CrimeType.VANDALISM,
-    reportedAt: new Date('2025-04-12T02:20:00'),
-    description: 'Graffiti on public building',
-  },
-  {
-    id: '4',
-    location: 'Railway Station',
-    latitude: 37.7594,
-    longitude: -122.4107,
-    crimeType: CrimeType.ROBBERY,
-    reportedAt: new Date('2025-04-08T19:45:00'),
-    description: 'Victim mugged at the east entrance',
-  },
-  {
-    id: '5',
-    location: 'Central Library',
-    latitude: 37.7785,
-    longitude: -122.4177,
-    crimeType: CrimeType.BURGLARY,
-    reportedAt: new Date('2025-04-05T01:10:00'),
-    description: 'Break-in after hours, electronics stolen',
-  },
-  {
-    id: '6',
-    location: 'City Hall',
-    latitude: 37.7815,
-    longitude: -122.4158,
-    crimeType: CrimeType.HOMICIDE,
-    reportedAt: new Date('2025-04-02T23:30:00'),
-    description: 'Fatal shooting in the parking garage',
-  },
-  {
-    id: '7',
-    location: 'Tech Campus',
-    latitude: 37.7729,
-    longitude: -122.4232,
-    crimeType: CrimeType.CYBERCRIME,
-    reportedAt: new Date('2025-04-14T11:15:00'),
-    description: 'Data breach from public terminals',
-  },
-  {
-    id: '8',
-    location: 'Financial District',
-    latitude: 37.7946,
-    longitude: -122.3999,
-    crimeType: CrimeType.FRAUD,
-    reportedAt: new Date('2025-04-17T15:20:00'),
-    description: 'Credit card skimming at ATM',
-  },
-  {
-    id: '9',
-    location: 'East Bay Area',
-    latitude: 37.7675,
-    longitude: -122.4114,
-    crimeType: CrimeType.DRUG_TRAFFICKING,
-    reportedAt: new Date('2025-04-19T22:40:00'),
-    description: 'Suspected narcotics sales',
-  },
-  {
-    id: '10',
-    location: 'Residential Complex',
-    latitude: 37.7858,
-    longitude: -122.4008,
-    crimeType: CrimeType.KIDNAPPING,
-    reportedAt: new Date('2025-04-07T16:50:00'),
-    description: 'Attempted abduction in parking lot',
-  },
-  {
-    id: '11',
-    location: 'Shopping District',
-    latitude: 37.7879,
-    longitude: -122.4074,
-    crimeType: CrimeType.THEFT,
-    reportedAt: new Date('2025-04-20T13:25:00'),
-    description: 'Shoplifting incident at clothing store',
-  },
-  {
-    id: '12',
-    location: 'University Campus',
-    latitude: 37.7721,
-    longitude: -122.4158,
-    crimeType: CrimeType.ASSAULT,
-    reportedAt: new Date('2025-04-18T01:15:00'),
-    description: 'Student assaulted near dormitories',
-  },
-  {
-    id: '13',
-    location: 'Waterfront Area',
-    latitude: 37.8002,
-    longitude: -122.41,
-    crimeType: CrimeType.ROBBERY,
-    reportedAt: new Date('2025-04-16T21:10:00'),
-    description: 'Armed robbery of tourists',
-  },
-  {
-    id: '14',
-    location: 'Community Center',
-    latitude: 37.7712,
-    longitude: -122.4036,
-    crimeType: CrimeType.ARSON,
-    reportedAt: new Date('2025-04-09T03:45:00'),
-    description: 'Small fire deliberately set at entrance',
-  },
-  {
-    id: '15',
-    location: 'Office Building',
-    latitude: 37.7632,
-    longitude: -122.4213,
-    crimeType: CrimeType.EMBEZZLEMENT,
-    reportedAt: new Date('2025-04-11T09:30:00'),
-    description: 'Employee reported for financial misconduct',
-  },
-];
+import { useGetMapAnalytics } from '../_api/use-get-map-analytics';
 
 // Map component configuration
 const mapContainerStyle = {
@@ -303,26 +130,26 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 const CrimeMap: React.FC = () => {
-  const [crimes, setCrimes] = useState<Crime[]>([]);
-  const [selectedCrime, setSelectedCrime] = useState<Crime | null>(null);
   const [filter, setFilter] = useState<CrimeType | null>(null);
   const [timeRange, setTimeRange] = useState<number>(30); // days
   const [view, setView] = useState<'map' | 'analytics'>('map');
 
-  // In a real app, this would fetch from your API
-  useEffect(() => {
-    setCrimes(mockCrimeData);
-  }, []);
+  const { data: crimes, isLoading } = useGetMapAnalytics();
 
+  const Tcrime = crimes?.[0];
+
+  const [selectedCrime, setSelectedCrime] = useState<typeof Tcrime | null>(
+    null
+  );
   // Filter crimes based on selected type and time range
   const filteredCrimes = useMemo(() => {
     const now = new Date();
     const cutoffDate = new Date(now.setDate(now.getDate() - timeRange));
 
-    return crimes.filter((crime) => {
+    return crimes?.filter((crime) => {
       const typeMatch = filter ? crime.crimeType === filter : true;
       const dateMatch = crime.reportedAt
-        ? crime.reportedAt >= cutoffDate
+        ? new Date(crime.reportedAt) >= cutoffDate
         : true;
       return typeMatch && dateMatch;
     });
@@ -338,7 +165,7 @@ const CrimeMap: React.FC = () => {
       {} as Record<CrimeType, number>
     );
 
-    filteredCrimes.forEach((crime) => {
+    filteredCrimes?.forEach((crime) => {
       counts[crime.crimeType]++;
     });
 
@@ -356,9 +183,9 @@ const CrimeMap: React.FC = () => {
   const timelineData = useMemo(() => {
     const data: Record<string, number> = {};
 
-    filteredCrimes.forEach((crime) => {
+    filteredCrimes?.forEach((crime) => {
       if (crime.reportedAt) {
-        const dateKey = crime.reportedAt.toISOString().split('T')[0];
+        const dateKey = new Date(crime.reportedAt).toISOString().split('T')[0];
         data[dateKey] = (data[dateKey] || 0) + 1;
       }
     });
@@ -380,7 +207,7 @@ const CrimeMap: React.FC = () => {
   const hotspotData = useMemo(() => {
     const locationCounts: Record<string, number> = {};
 
-    filteredCrimes.forEach((crime) => {
+    filteredCrimes?.forEach((crime) => {
       locationCounts[crime.location] =
         (locationCounts[crime.location] || 0) + 1;
     });
@@ -404,14 +231,6 @@ const CrimeMap: React.FC = () => {
 
   return (
     <div className='bg-gray-900 text-gray-200 min-h-screen'>
-      <Head>
-        <title>Crime Map Analytics Dashboard</title>
-        <meta
-          name='description'
-          content='Interactive crime map with analytics and visualization'
-        />
-      </Head>
-
       <div className='container mx-auto pt-18'>
         <h1 className='text-3xl font-bold mb-4 text-gray-100'>
           Crime Map Analytics Dashboard
@@ -606,7 +425,7 @@ const CrimeMap: React.FC = () => {
                     ],
                   }}
                 >
-                  {filteredCrimes.map((crime) => (
+                  {filteredCrimes?.map((crime) => (
                     <Marker
                       key={crime.id}
                       position={{
@@ -635,7 +454,7 @@ const CrimeMap: React.FC = () => {
                         {selectedCrime.reportedAt && (
                           <p className='text-sm mb-1'>
                             <span className='font-semibold'>Reported:</span>{' '}
-                            {formatDate(selectedCrime.reportedAt)}
+                            {formatDate(new Date(selectedCrime.reportedAt))}
                           </p>
                         )}
                         {selectedCrime.description && (
@@ -661,7 +480,7 @@ const CrimeMap: React.FC = () => {
                     Total Incidents
                   </h3>
                   <p className='text-4xl font-bold text-gray-100'>
-                    {filteredCrimes.length}
+                    {filteredCrimes?.length}
                   </p>
                 </div>
                 <div className='rounded-lg bg-gray-700 p-4 shadow border border-gray-600'>
@@ -680,14 +499,20 @@ const CrimeMap: React.FC = () => {
                   <h3 className='text-lg font-semibold mb-2 text-gray-200'>
                     Last Reported
                   </h3>
-                  {filteredCrimes.length > 0 ? (
+                  {filteredCrimes && filteredCrimes?.length > 0 ? (
                     <p className='text-xl font-bold text-gray-100'>
                       {formatDate(
-                        [...filteredCrimes].sort(
-                          (a, b) =>
-                            (b.reportedAt?.getTime() || 0) -
-                            (a.reportedAt?.getTime() || 0)
-                        )[0].reportedAt || new Date()
+                        new Date(
+                          [...filteredCrimes].sort(
+                            (a, b) =>
+                              (b.reportedAt
+                                ? new Date(b.reportedAt).getTime()
+                                : 0) -
+                              (a.reportedAt
+                                ? new Date(a.reportedAt).getTime()
+                                : 0)
+                          )[0].reportedAt || new Date()
+                        )
                       )}
                     </p>
                   ) : (
@@ -704,113 +529,137 @@ const CrimeMap: React.FC = () => {
             </h2>
 
             <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
-            <div>
-  <h3 className="text-lg font-semibold mb-3 text-gray-200">
-    Crime Type Distribution
-  </h3>
-  <div className="bg-gray-700/60 p-5 rounded-xl border-t border-gray-500/30 shadow-lg backdrop-blur-sm">
-    <div className="flex flex-col md:flex-row items-center">
-      {/* Left side: Pie chart with glow effect */}
-      <div className="md:w-3/5 order-1 md:order-1 h-80 relative">
-        <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-          <div className="w-28 h-28 rounded-full bg-gray-800/80 flex flex-col items-center justify-center backdrop-blur-sm">
-            <span className="text-sm font-medium text-gray-400">Total</span>
-            <span className="text-xl font-bold text-gray-200">
-              {crimeTypeData.reduce((sum, item) => sum + item.value, 0)}
-            </span>
-          </div>
-        </div>
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <defs>
-              {crimeTypeData.map((entry, index) => (
-                <linearGradient 
-                  key={`gradient-${index}`}
-                  id={`colorGradient-${index}`} 
-                  x1="0" y1="0" 
-                  x2="0" y2="1"
-                >
-                  <stop offset="0%" stopColor={entry.color} stopOpacity={0.9}/>
-                  <stop offset="100%" stopColor={entry.color} stopOpacity={0.6}/>
-                </linearGradient>
-              ))}
-            </defs>
-            <Pie
-              data={crimeTypeData}
-              cx="50%"
-              cy="50%"
-              labelLine={false}
-              innerRadius={60}
-              outerRadius={85}
-              paddingAngle={3}
-              cornerRadius={4}
-              fill="#8884d8"
-              dataKey="value"
-              label={false}
-            >
-              {crimeTypeData.map((entry, index) => (
-                <Cell 
-                  key={`cell-${index}`} 
-                  fill={`url(#colorGradient-${index})`} 
-                  stroke="rgba(30, 41, 59, 0.5)"
-                  strokeWidth={1}
-                />
-              ))}
-            </Pie>
-            <Tooltip 
-              content={<CustomTooltip />} 
-              cursor={false}
-            />
-          </PieChart>
-        </ResponsiveContainer>
-      </div>
-      
-      {/* Right side: Distribution data as elegant cards */}
-      <div className="md:w-2/5 order-2 md:order-2 mt-6 md:mt-0 md:pl-4 w-full">
-        <h4 className="text-sm font-medium text-gray-400 mb-3 pb-1 border-b border-gray-600/50 uppercase tracking-wide">
-          Breakdown
-        </h4>
-        <div className="space-y-2 max-h-64 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
-          {crimeTypeData
-            .sort((a, b) => b.value - a.value)
-            .map((entry, index) => {
-              const total = crimeTypeData.reduce((sum, type) => sum + type.value, 0);
-              const percentage = Math.round((entry.value / total) * 100);
-              
-              return (
-                <div 
-                  key={index} 
-                  className="flex items-center bg-gray-800/60 hover:bg-gray-800/80 p-2 rounded-lg transition-all duration-200 backdrop-blur-sm border border-gray-700/50"
-                >
-                  <div 
-                    className="w-2 h-full min-h-[30px] rounded-l-md mr-2" 
-                    style={{ backgroundColor: entry.color }}
-                  ></div>
-                  <div className="flex-1">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-200">{entry.name}</span>
-                      <div className="flex items-center">
-                        <span className="text-xs font-medium mr-2 text-gray-300">{entry.value}</span>
-                        <span className="text-xs bg-gray-700/80 px-1.5 py-0.5 rounded-md text-gray-300 font-medium">
-                          {percentage}%
-                        </span>
+              <div>
+                <h3 className='text-lg font-semibold mb-3 text-gray-200'>
+                  Crime Type Distribution
+                </h3>
+                <div className='bg-gray-700/60 p-5 rounded-xl border-t border-gray-500/30 shadow-lg backdrop-blur-sm'>
+                  <div className='flex flex-col md:flex-row items-center'>
+                    {/* Left side: Pie chart with glow effect */}
+                    <div className='md:w-3/5 order-1 md:order-1 h-80 relative'>
+                      <div className='absolute inset-0 flex items-center justify-center z-10 pointer-events-none'>
+                        <div className='w-28 h-28 rounded-full bg-gray-800/80 flex flex-col items-center justify-center backdrop-blur-sm'>
+                          <span className='text-sm font-medium text-gray-400'>
+                            Total
+                          </span>
+                          <span className='text-xl font-bold text-gray-200'>
+                            {crimeTypeData.reduce(
+                              (sum, item) => sum + item.value,
+                              0
+                            )}
+                          </span>
+                        </div>
                       </div>
+                      <ResponsiveContainer width='100%' height='100%'>
+                        <PieChart>
+                          <defs>
+                            {crimeTypeData.map((entry, index) => (
+                              <linearGradient
+                                key={`gradient-${index}`}
+                                id={`colorGradient-${index}`}
+                                x1='0'
+                                y1='0'
+                                x2='0'
+                                y2='1'
+                              >
+                                <stop
+                                  offset='0%'
+                                  stopColor={entry.color}
+                                  stopOpacity={0.9}
+                                />
+                                <stop
+                                  offset='100%'
+                                  stopColor={entry.color}
+                                  stopOpacity={0.6}
+                                />
+                              </linearGradient>
+                            ))}
+                          </defs>
+                          <Pie
+                            data={crimeTypeData}
+                            cx='50%'
+                            cy='50%'
+                            labelLine={false}
+                            innerRadius={60}
+                            outerRadius={85}
+                            paddingAngle={3}
+                            cornerRadius={4}
+                            fill='#8884d8'
+                            dataKey='value'
+                            label={false}
+                          >
+                            {crimeTypeData.map((entry, index) => (
+                              <Cell
+                                key={`cell-${index}`}
+                                fill={`url(#colorGradient-${index})`}
+                                stroke='rgba(30, 41, 59, 0.5)'
+                                strokeWidth={1}
+                              />
+                            ))}
+                          </Pie>
+                          <Tooltip content={<CustomTooltip />} cursor={false} />
+                        </PieChart>
+                      </ResponsiveContainer>
                     </div>
-                    <div className="mt-1 w-full bg-gray-700/40 rounded-full h-1">
-                      <div 
-                        className="h-1 rounded-full" 
-                        style={{ width: `${percentage}%`, backgroundColor: entry.color }}
-                      ></div>
+
+                    {/* Right side: Distribution data as elegant cards */}
+                    <div className='md:w-2/5 order-2 md:order-2 mt-6 md:mt-0 md:pl-4 w-full'>
+                      <h4 className='text-sm font-medium text-gray-400 mb-3 pb-1 border-b border-gray-600/50 uppercase tracking-wide'>
+                        Breakdown
+                      </h4>
+                      <div className='space-y-2 max-h-64 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800'>
+                        {crimeTypeData
+                          .sort((a, b) => b.value - a.value)
+                          .map((entry, index) => {
+                            const total = crimeTypeData.reduce(
+                              (sum, type) => sum + type.value,
+                              0
+                            );
+                            const percentage = Math.round(
+                              (entry.value / total) * 100
+                            );
+
+                            return (
+                              <div
+                                key={index}
+                                className='flex items-center bg-gray-800/60 hover:bg-gray-800/80 p-2 rounded-lg transition-all duration-200 backdrop-blur-sm border border-gray-700/50'
+                              >
+                                <div
+                                  className='w-2 h-full min-h-[30px] rounded-l-md mr-2'
+                                  style={{ backgroundColor: entry.color }}
+                                ></div>
+                                <div className='flex-1'>
+                                  <div className='flex justify-between items-center'>
+                                    <span className='text-sm font-medium text-gray-200'>
+                                      {entry.name}
+                                    </span>
+                                    <div className='flex items-center'>
+                                      <span className='text-xs font-medium mr-2 text-gray-300'>
+                                        {entry.value}
+                                      </span>
+                                      <span className='text-xs bg-gray-700/80 px-1.5 py-0.5 rounded-md text-gray-300 font-medium'>
+                                        {percentage}%
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <div className='mt-1 w-full bg-gray-700/40 rounded-full h-1'>
+                                    <div
+                                      className='h-1 rounded-full'
+                                      style={{
+                                        width: `${percentage}%`,
+                                        backgroundColor: entry.color,
+                                      }}
+                                    ></div>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                      </div>
                     </div>
                   </div>
                 </div>
-              );
-            })}
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+              </div>
 
               <div>
                 <h3 className='text-lg font-semibold mb-2 text-gray-200'>
@@ -911,7 +760,7 @@ const CrimeMap: React.FC = () => {
 
             <div className='mt-6'>
               <h3 className='text-lg font-semibold mb-2 text-gray-200'>
-                Crime Locations ({filteredCrimes.length})
+                Crime Locations ({filteredCrimes?.length})
               </h3>
               <div className='overflow-x-auto'>
                 <table className='min-w-full bg-gray-800 border border-gray-700'>
@@ -932,8 +781,8 @@ const CrimeMap: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredCrimes.length > 0 ? (
-                      filteredCrimes.map((crime) => (
+                    {filteredCrimes && filteredCrimes?.length > 0 ? (
+                      filteredCrimes?.map((crime) => (
                         <tr
                           key={crime.id}
                           className='border-t border-gray-700 hover:bg-gray-700'
@@ -949,7 +798,7 @@ const CrimeMap: React.FC = () => {
                           </td>
                           <td className='py-2 px-4'>
                             {crime.reportedAt
-                              ? formatDate(crime.reportedAt)
+                              ? formatDate(new Date(crime.reportedAt))
                               : 'N/A'}
                           </td>
                           <td className='py-2 px-4'>
