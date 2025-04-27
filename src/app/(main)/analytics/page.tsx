@@ -413,7 +413,7 @@ const CrimeMap: React.FC = () => {
       </Head>
 
       <div className="container mx-auto p-4">
-        <h1 className="text-3xl font-bold mb-4 text-gray-100">
+        <h1 className="text-3xl font-bold mb-4 text-gray-100 pt-18">
           Crime Map Analytics Dashboard
         </h1>
 
