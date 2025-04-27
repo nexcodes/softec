@@ -110,8 +110,8 @@ model Crime {
   title        String
   description  String
   location     String
-  latitude     String
-  longitude    String
+  latitude     BigInt
+  longitude    BigInt
   reportedAt   DateTime @default(now())
   crimeType    String
   incidentDate DateTime

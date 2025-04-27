@@ -5,6 +5,10 @@ export const createCrimeSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().min(1, "Description is required"),
   location: z.string().min(1, "Location is required"),
+  latitude: z.number().min(-90, "Latitude must be between -90 and 90").max(90, "Latitude must be between -90 and 90"),
+  longitude: z.number().min(-180, "Longitude must be between -180 and 180").max(180, "Longitude must be between -180 and 180"),
+  crimeType: z.string().min(1, "Crime type is required"),
+  incidentDate: z.date().min(new Date(), "Incident date is required"),
   userId: z.string().optional(),
   isLive: z.boolean().default(true),
 });
