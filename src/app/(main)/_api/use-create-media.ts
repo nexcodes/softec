@@ -1,10 +1,9 @@
-import { client } from "@/lib/hono";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { InferRequestType, InferResponseType } from "hono";
-import { toast } from "sonner";
+import { client } from '@/lib/hono';
+import { useMutation } from '@tanstack/react-query';
+import { InferRequestType, InferResponseType } from 'hono';
 
 type ResponseType = InferResponseType<typeof client.api.media.$post>;
-type RequestType = InferRequestType<typeof client.api.media.$post>["json"];
+type RequestType = InferRequestType<typeof client.api.media.$post>['json'];
 
 export const useCreateMedia = () => {
   return useMutation<ResponseType, Error, RequestType>({
@@ -14,7 +13,7 @@ export const useCreateMedia = () => {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to create media");
+        throw new Error('Failed to create media');
       }
 
       return await response.json();

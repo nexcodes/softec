@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from 'react';
 
-type LocationSource = "gps" | "ip" | null;
+type LocationSource = 'gps' | 'ip' | null;
 
 interface LocationState {
   latitude: number | null;
@@ -34,13 +34,13 @@ const useLocation = (): LocationState => {
         longitude: position.coords.longitude,
         loading: false,
         error: null,
-        source: "gps",
+        source: 'gps',
       });
     };
 
     // Function to handle GPS errors - will fallback to IP geolocation
     const handleGPSError = (error: GeolocationPositionError): void => {
-      console.log("GPS error, falling back to IP geolocation:", error.message);
+      console.log('GPS error, falling back to IP geolocation:', error.message);
       fetchLocationByIP();
     };
 
@@ -48,9 +48,9 @@ const useLocation = (): LocationState => {
     const fetchLocationByIP = async (): Promise<void> => {
       try {
         // Using a free IP geolocation API
-        const response = await fetch("https://ipapi.co/json/");
+        const response = await fetch('https://ipapi.co/json/');
         if (!response.ok) {
-          throw new Error("Failed to fetch location by IP");
+          throw new Error('Failed to fetch location by IP');
         }
 
         const data = await response.json();
@@ -60,7 +60,7 @@ const useLocation = (): LocationState => {
           longitude: data.longitude,
           loading: false,
           error: null,
-          source: "ip",
+          source: 'ip',
         });
       } catch (error) {
         setLocation({
@@ -68,7 +68,7 @@ const useLocation = (): LocationState => {
           longitude: null,
           loading: false,
           error: `Failed to get location: ${
-            error instanceof Error ? error.message : "Unknown error"
+            error instanceof Error ? error.message : 'Unknown error'
           }`,
           source: null,
         });

@@ -1,11 +1,11 @@
-import { useEffect } from "react";
+import { useEffect } from 'react';
 
 export const useStyledAutocomplete = () => {
   useEffect(() => {
     // Apply custom styles to the Google Places Autocomplete dropdown
     const customizeAutocompleteStyles = () => {
       // This targets the Google Places Autocomplete dropdown container
-      const style = document.createElement("style");
+      const style = document.createElement('style');
       style.textContent = `
             /* Main container for suggestions */
             .pac-container {
@@ -63,8 +63,8 @@ export const useStyledAutocomplete = () => {
 
     return () => {
       // Clean up added styles on component unmount
-      document.querySelectorAll("style").forEach((style) => {
-        if (style.textContent?.includes(".pac-container")) {
+      document.querySelectorAll('style').forEach((style) => {
+        if (style.textContent?.includes('.pac-container')) {
           style.remove();
         }
       });

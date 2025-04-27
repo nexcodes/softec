@@ -1,22 +1,22 @@
-import axios from "axios";
-import { jest } from "@jest/globals";
+import { currentUser } from '@/lib/current-user';
+import { jest } from '@jest/globals';
+import axios from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 // Mock axios
-jest.mock("axios");
+jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 // Mock auth
-jest.mock("@/lib/current-user", () => ({
+jest.mock('@/lib/current-user', () => ({
   currentUser: jest.fn(),
 }));
-import { currentUser } from "@/lib/current-user";
 const mockedCurrentUser = currentUser as jest.MockedFunction<
   typeof currentUser
 >;
 
-describe("Crime API Endpoints", () => {
+describe('Crime API Endpoints', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -25,32 +25,32 @@ describe("Crime API Endpoints", () => {
     jest.resetAllMocks();
   });
 
-  describe("GET /api/crime", () => {
-    it("should return a list of crimes with vote statistics", async () => {
+  describe('GET /api/crime', () => {
+    it('should return a list of crimes with vote statistics', async () => {
       // Mock data
       const mockCrimes = [
         {
-          id: "1",
-          title: "Theft in Downtown",
-          description: "A case of robbery at a convenience store",
-          location: "Downtown",
+          id: '1',
+          title: 'Theft in Downtown',
+          description: 'A case of robbery at a convenience store',
+          location: 'Downtown',
           isLive: true,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
-          userId: "user1",
-          media: [{ id: "media1", url: "https://example.com/image1.jpg" }],
+          userId: 'user1',
+          media: [{ id: 'media1', url: 'https://example.com/image1.jpg' }],
           comments: [
             {
-              id: "comment1",
-              content: "This is concerning",
-              user: { id: "user2", name: "Jane Doe" },
+              id: 'comment1',
+              content: 'This is concerning',
+              user: { id: 'user2', name: 'Jane Doe' },
             },
           ],
           votes: [
-            { id: "vote1", value: true, user: { id: "user2" } },
-            { id: "vote2", value: false, user: { id: "user3" } },
+            { id: 'vote1', value: true, user: { id: 'user2' } },
+            { id: 'vote2', value: false, user: { id: 'user3' } },
           ],
-          user: { id: "user1", name: "John Doe" },
+          user: { id: 'user1', name: 'John Doe' },
           voteStats: {
             total: 2,
             upvotes: 1,
@@ -58,21 +58,21 @@ describe("Crime API Endpoints", () => {
           },
         },
         {
-          id: "2",
-          title: "Vandalism at Park",
-          description: "Property damage at city park",
-          location: "Central Park",
+          id: '2',
+          title: 'Vandalism at Park',
+          description: 'Property damage at city park',
+          location: 'Central Park',
           isLive: true,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
-          userId: "user3",
+          userId: 'user3',
           media: [],
           comments: [],
           votes: [
-            { id: "vote3", value: true, user: { id: "user1" } },
-            { id: "vote4", value: true, user: { id: "user2" } },
+            { id: 'vote3', value: true, user: { id: 'user1' } },
+            { id: 'vote4', value: true, user: { id: 'user2' } },
           ],
-          user: { id: "user3", name: "Bob Smith" },
+          user: { id: 'user3', name: 'Bob Smith' },
           voteStats: {
             total: 2,
             upvotes: 2,
@@ -83,7 +83,7 @@ describe("Crime API Endpoints", () => {
 
       const mockResponse = {
         data: {
-          message: "Crimes retrieved successfully.",
+          message: 'Crimes retrieved successfully.',
           data: mockCrimes,
           status: 200,
         },
@@ -97,7 +97,7 @@ describe("Crime API Endpoints", () => {
 
       // Assertions
       expect(response.status).toBe(200);
-      expect(response.data.message).toBe("Crimes retrieved successfully.");
+      expect(response.data.message).toBe('Crimes retrieved successfully.');
       expect(response.data.data).toHaveLength(2);
       expect(response.data.data[0].voteStats).toEqual({
         total: 2,
@@ -108,18 +108,18 @@ describe("Crime API Endpoints", () => {
     });
   });
 
-  describe("POST /api/crime", () => {
+  describe('POST /api/crime', () => {
     const crimeData = {
-      title: "New Crime Report",
-      description: "Description of the incident",
-      location: "City Center",
+      title: 'New Crime Report',
+      description: 'Description of the incident',
+      location: 'City Center',
       isLive: true,
     };
 
-    it("should create a new crime report", async () => {
+    it('should create a new crime report', async () => {
       // Mock response
       const mockCreatedCrime = {
-        id: "new-crime-id",
+        id: 'new-crime-id',
         ...crimeData,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -128,7 +128,7 @@ describe("Crime API Endpoints", () => {
 
       const mockResponse = {
         data: {
-          message: "Crime created successfully.",
+          message: 'Crime created successfully.',
           data: mockCreatedCrime,
           status: 201,
         },
@@ -140,13 +140,13 @@ describe("Crime API Endpoints", () => {
       // Execute request
       const response = await axios.post(`${API_URL}/api/crime`, crimeData, {
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
       });
 
       // Assertions
       expect(response.status).toBe(201);
-      expect(response.data.message).toBe("Crime created successfully.");
+      expect(response.data.message).toBe('Crime created successfully.');
       expect(response.data.data.title).toBe(crimeData.title);
       expect(response.data.data.description).toBe(crimeData.description);
       expect(response.data.data.location).toBe(crimeData.location);
@@ -155,22 +155,22 @@ describe("Crime API Endpoints", () => {
         crimeData,
         {
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
           },
         }
       );
     });
 
-    it("should create a crime report linked to a user", async () => {
+    it('should create a crime report linked to a user', async () => {
       // Modified crime data with userId
       const crimeDataWithUser = {
         ...crimeData,
-        userId: "user-123",
+        userId: 'user-123',
       };
 
       // Mock response
       const mockCreatedCrime = {
-        id: "new-crime-id-with-user",
+        id: 'new-crime-id-with-user',
         ...crimeDataWithUser,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -178,7 +178,7 @@ describe("Crime API Endpoints", () => {
 
       const mockResponse = {
         data: {
-          message: "Crime created successfully.",
+          message: 'Crime created successfully.',
           data: mockCreatedCrime,
           status: 201,
         },
@@ -193,7 +193,7 @@ describe("Crime API Endpoints", () => {
         crimeDataWithUser,
         {
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
           },
         }
       );
@@ -206,22 +206,22 @@ describe("Crime API Endpoints", () => {
         crimeDataWithUser,
         {
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
           },
         }
       );
     });
   });
 
-  describe("PUT /api/crime/:id", () => {
+  describe('PUT /api/crime/:id', () => {
     const updateData = {
-      title: "Updated Crime Title",
-      description: "Updated description of the incident",
-      location: "Updated Location",
+      title: 'Updated Crime Title',
+      description: 'Updated description of the incident',
+      location: 'Updated Location',
     };
 
-    it("should update an existing crime report", async () => {
-      const crimeId = "crime-id-123";
+    it('should update an existing crime report', async () => {
+      const crimeId = 'crime-id-123';
 
       // Mock response
       const mockUpdatedCrime = {
@@ -230,12 +230,12 @@ describe("Crime API Endpoints", () => {
         isLive: true,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        userId: "user-123",
+        userId: 'user-123',
       };
 
       const mockResponse = {
         data: {
-          message: "Crime updated successfully.",
+          message: 'Crime updated successfully.',
           data: mockUpdatedCrime,
         },
         status: 200,
@@ -249,14 +249,14 @@ describe("Crime API Endpoints", () => {
         updateData,
         {
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
           },
         }
       );
 
       // Assertions
       expect(response.status).toBe(200);
-      expect(response.data.message).toBe("Crime updated successfully.");
+      expect(response.data.message).toBe('Crime updated successfully.');
       expect(response.data.data.title).toBe(updateData.title);
       expect(response.data.data.description).toBe(updateData.description);
       expect(response.data.data.location).toBe(updateData.location);
@@ -265,20 +265,20 @@ describe("Crime API Endpoints", () => {
         updateData,
         {
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
           },
         }
       );
     });
 
-    it("should return 404 if crime not found", async () => {
-      const nonExistentCrimeId = "non-existent-id";
+    it('should return 404 if crime not found', async () => {
+      const nonExistentCrimeId = 'non-existent-id';
 
       // Mock error response
       mockedAxios.put.mockRejectedValue({
         response: {
           status: 404,
-          data: { message: "Crime not found." },
+          data: { message: 'Crime not found.' },
         },
         isAxiosError: true,
       });
@@ -290,15 +290,15 @@ describe("Crime API Endpoints", () => {
           updateData,
           {
             headers: {
-              "Content-Type": "application/json",
+              'Content-Type': 'application/json',
             },
           }
         );
-        fail("Expected request to fail with 404 status");
+        fail('Expected request to fail with 404 status');
       } catch (error: any) {
         if (error.response) {
           expect(error.response.status).toBe(404);
-          expect(error.response.data).toEqual({ message: "Crime not found." });
+          expect(error.response.data).toEqual({ message: 'Crime not found.' });
         } else {
           throw error;
         }
@@ -306,25 +306,25 @@ describe("Crime API Endpoints", () => {
     });
   });
 
-  describe("GET /api/crime/search", () => {
-    it("should search crimes by query", async () => {
-      const searchQuery = "Theft";
+  describe('GET /api/crime/search', () => {
+    it('should search crimes by query', async () => {
+      const searchQuery = 'Theft';
 
       // Mock search results
       const mockResults = [
         {
-          id: "1",
-          title: "Theft in Downtown",
-          description: "A case of robbery at a convenience store",
-          location: "Downtown",
+          id: '1',
+          title: 'Theft in Downtown',
+          description: 'A case of robbery at a convenience store',
+          location: 'Downtown',
           isLive: true,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
-          userId: "user1",
+          userId: 'user1',
           media: [],
           comments: [],
-          votes: [{ id: "vote1", value: true, user: { id: "user2" } }],
-          user: { id: "user1", name: "John Doe" },
+          votes: [{ id: 'vote1', value: true, user: { id: 'user2' } }],
+          user: { id: 'user1', name: 'John Doe' },
           voteStats: {
             total: 1,
             upvotes: 1,
@@ -335,7 +335,7 @@ describe("Crime API Endpoints", () => {
 
       const mockResponse = {
         data: {
-          message: "Search successful.",
+          message: 'Search successful.',
           data: mockResults,
           status: 200,
         },
@@ -351,7 +351,7 @@ describe("Crime API Endpoints", () => {
 
       // Assertions
       expect(response.status).toBe(200);
-      expect(response.data.message).toBe("Search successful.");
+      expect(response.data.message).toBe('Search successful.');
       expect(response.data.data).toHaveLength(1);
       expect(response.data.data[0].title).toContain(searchQuery);
       expect(mockedAxios.get).toHaveBeenCalledWith(
@@ -359,13 +359,13 @@ describe("Crime API Endpoints", () => {
       );
     });
 
-    it("should return empty array if no matching crimes", async () => {
-      const searchQuery = "NonExistentCrimeType";
+    it('should return empty array if no matching crimes', async () => {
+      const searchQuery = 'NonExistentCrimeType';
 
       // Mock empty results
       const mockResponse = {
         data: {
-          message: "Search successful.",
+          message: 'Search successful.',
           data: [],
           status: 200,
         },
@@ -385,34 +385,34 @@ describe("Crime API Endpoints", () => {
     });
   });
 
-  describe("GET /api/crime/:id", () => {
-    it("should return a specific crime by ID with vote statistics", async () => {
-      const crimeId = "crime-id-123";
+  describe('GET /api/crime/:id', () => {
+    it('should return a specific crime by ID with vote statistics', async () => {
+      const crimeId = 'crime-id-123';
 
       // Mock crime data
       const mockCrime = {
         id: crimeId,
-        title: "Specific Crime",
-        description: "Details of the specific crime",
-        location: "Specific Location",
+        title: 'Specific Crime',
+        description: 'Details of the specific crime',
+        location: 'Specific Location',
         isLive: true,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        userId: "user1",
-        media: [{ id: "media1", url: "https://example.com/image1.jpg" }],
+        userId: 'user1',
+        media: [{ id: 'media1', url: 'https://example.com/image1.jpg' }],
         comments: [
           {
-            id: "comment1",
-            content: "This is a comment",
-            user: { id: "user2", name: "Jane Doe" },
+            id: 'comment1',
+            content: 'This is a comment',
+            user: { id: 'user2', name: 'Jane Doe' },
           },
         ],
         votes: [
-          { id: "vote1", value: true, user: { id: "user2" } },
-          { id: "vote2", value: true, user: { id: "user3" } },
-          { id: "vote3", value: false, user: { id: "user4" } },
+          { id: 'vote1', value: true, user: { id: 'user2' } },
+          { id: 'vote2', value: true, user: { id: 'user3' } },
+          { id: 'vote3', value: false, user: { id: 'user4' } },
         ],
-        user: { id: "user1", name: "John Doe" },
+        user: { id: 'user1', name: 'John Doe' },
         voteStats: {
           total: 3,
           upvotes: 2,
@@ -422,7 +422,7 @@ describe("Crime API Endpoints", () => {
 
       const mockResponse = {
         data: {
-          message: "Crime retrieved successfully.",
+          message: 'Crime retrieved successfully.',
           data: mockCrime,
           status: 200,
         },
@@ -436,7 +436,7 @@ describe("Crime API Endpoints", () => {
 
       // Assertions
       expect(response.status).toBe(200);
-      expect(response.data.message).toBe("Crime retrieved successfully.");
+      expect(response.data.message).toBe('Crime retrieved successfully.');
       expect(response.data.data.id).toBe(crimeId);
       expect(response.data.data.media).toHaveLength(1);
       expect(response.data.data.comments).toHaveLength(1);
@@ -451,14 +451,14 @@ describe("Crime API Endpoints", () => {
       );
     });
 
-    it("should return 404 if crime not found", async () => {
-      const nonExistentCrimeId = "non-existent-id";
+    it('should return 404 if crime not found', async () => {
+      const nonExistentCrimeId = 'non-existent-id';
 
       // Mock error response
       mockedAxios.get.mockRejectedValue({
         response: {
           status: 404,
-          data: { message: "Crime not found." },
+          data: { message: 'Crime not found.' },
         },
         isAxiosError: true,
       });
@@ -466,11 +466,11 @@ describe("Crime API Endpoints", () => {
       try {
         // Execute request
         await axios.get(`${API_URL}/api/crime/${nonExistentCrimeId}`);
-        fail("Expected request to fail with 404 status");
+        fail('Expected request to fail with 404 status');
       } catch (error: any) {
         if (error.response) {
           expect(error.response.status).toBe(404);
-          expect(error.response.data).toEqual({ message: "Crime not found." });
+          expect(error.response.data).toEqual({ message: 'Crime not found.' });
         } else {
           throw error;
         }
@@ -478,29 +478,29 @@ describe("Crime API Endpoints", () => {
     });
   });
 
-  describe("POST /api/crime/:id/vote", () => {
-    const crimeId = "crime-id-123";
+  describe('POST /api/crime/:id/vote', () => {
+    const crimeId = 'crime-id-123';
     const voteData = { value: true };
 
     beforeEach(() => {
       // Setup mocked current user
       mockedCurrentUser.mockResolvedValue({
-        id: "user-123",
-        name: "Test User",
-        email: "test@example.com",
-        role: "USER",
+        id: 'user-123',
+        name: 'Test User',
+        email: 'test@example.com',
+        role: 'USER',
         emailVerified: true,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
     });
 
-    it("should create a new vote on a crime", async () => {
+    it('should create a new vote on a crime', async () => {
       // Mock vote creation response
       const mockCreatedVote = {
-        id: "new-vote-id",
+        id: 'new-vote-id',
         crimeId,
-        userId: "user-123",
+        userId: 'user-123',
         value: true,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -508,7 +508,7 @@ describe("Crime API Endpoints", () => {
 
       const mockResponse = {
         data: {
-          message: "Vote recorded.",
+          message: 'Vote recorded.',
           data: mockCreatedVote,
           status: 201,
         },
@@ -523,14 +523,14 @@ describe("Crime API Endpoints", () => {
         voteData,
         {
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
           },
         }
       );
 
       // Assertions
       expect(response.status).toBe(201);
-      expect(response.data.message).toBe("Vote recorded.");
+      expect(response.data.message).toBe('Vote recorded.');
       expect(response.data.data.crimeId).toBe(crimeId);
       expect(response.data.data.value).toBe(voteData.value);
       expect(mockedAxios.post).toHaveBeenCalledWith(
@@ -538,18 +538,18 @@ describe("Crime API Endpoints", () => {
         voteData,
         {
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
           },
         }
       );
     });
 
-    it("should update an existing vote if user votes differently", async () => {
+    it('should update an existing vote if user votes differently', async () => {
       // Mock vote update response
       const mockUpdatedVote = {
-        id: "existing-vote-id",
+        id: 'existing-vote-id',
         crimeId,
-        userId: "user-123",
+        userId: 'user-123',
         value: true, // Changed from previous vote
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -557,7 +557,7 @@ describe("Crime API Endpoints", () => {
 
       const mockResponse = {
         data: {
-          message: "Vote updated.",
+          message: 'Vote updated.',
           data: mockUpdatedVote,
           status: 200,
         },
@@ -572,22 +572,22 @@ describe("Crime API Endpoints", () => {
         voteData,
         {
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
           },
         }
       );
 
       // Assertions
       expect(response.status).toBe(200);
-      expect(response.data.message).toBe("Vote updated.");
+      expect(response.data.message).toBe('Vote updated.');
       expect(response.data.data.value).toBe(voteData.value);
     });
 
-    it("should remove a vote if user votes the same way twice", async () => {
+    it('should remove a vote if user votes the same way twice', async () => {
       // Mock vote removal response
       const mockResponse = {
         data: {
-          message: "Vote removed.",
+          message: 'Vote removed.',
           status: 200,
         },
         status: 200,
@@ -601,17 +601,17 @@ describe("Crime API Endpoints", () => {
         voteData,
         {
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
           },
         }
       );
 
       // Assertions
       expect(response.status).toBe(200);
-      expect(response.data.message).toBe("Vote removed.");
+      expect(response.data.message).toBe('Vote removed.');
     });
 
-    it("should return 401 if user is not authenticated", async () => {
+    it('should return 401 if user is not authenticated', async () => {
       // Mock unauthorized user
       mockedCurrentUser.mockResolvedValue(null);
 
@@ -619,7 +619,7 @@ describe("Crime API Endpoints", () => {
       mockedAxios.post.mockRejectedValue({
         response: {
           status: 401,
-          data: { error: "Unauthorized!" },
+          data: { error: 'Unauthorized!' },
         },
         isAxiosError: true,
       });
@@ -628,14 +628,14 @@ describe("Crime API Endpoints", () => {
         // Execute request
         await axios.post(`${API_URL}/api/crime/${crimeId}/vote`, voteData, {
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
           },
         });
-        fail("Expected request to fail with 401 status");
+        fail('Expected request to fail with 401 status');
       } catch (error: any) {
         if (error.response) {
           expect(error.response.status).toBe(401);
-          expect(error.response.data).toEqual({ error: "Unauthorized!" });
+          expect(error.response.data).toEqual({ error: 'Unauthorized!' });
         } else {
           throw error;
         }
@@ -643,42 +643,42 @@ describe("Crime API Endpoints", () => {
     });
   });
 
-  describe("POST /api/crime/:id/comments", () => {
-    const crimeId = "crime-id-123";
-    const commentData = { content: "This is a test comment" };
+  describe('POST /api/crime/:id/comments', () => {
+    const crimeId = 'crime-id-123';
+    const commentData = { content: 'This is a test comment' };
 
     beforeEach(() => {
       // Setup mocked current user
       mockedCurrentUser.mockResolvedValue({
-        id: "user-123",
-        name: "Test User",
-        email: "test@example.com",
-        role: "USER",
+        id: 'user-123',
+        name: 'Test User',
+        email: 'test@example.com',
+        role: 'USER',
         emailVerified: true,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
     });
 
-    it("should create a new comment on a crime", async () => {
+    it('should create a new comment on a crime', async () => {
       // Mock comment creation response
       const mockCreatedComment = {
-        id: "new-comment-id",
+        id: 'new-comment-id',
         content: commentData.content,
         crimeId,
-        userId: "user-123",
+        userId: 'user-123',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         user: {
-          id: "user-123",
-          name: "Test User",
-          email: "test@example.com",
+          id: 'user-123',
+          name: 'Test User',
+          email: 'test@example.com',
         },
       };
 
       const mockResponse = {
         data: {
-          message: "Comment created.",
+          message: 'Comment created.',
           data: mockCreatedComment,
           status: 201,
         },
@@ -693,34 +693,34 @@ describe("Crime API Endpoints", () => {
         commentData,
         {
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
           },
         }
       );
 
       // Assertions
       expect(response.status).toBe(201);
-      expect(response.data.message).toBe("Comment created.");
+      expect(response.data.message).toBe('Comment created.');
       expect(response.data.data.content).toBe(commentData.content);
       expect(response.data.data.crimeId).toBe(crimeId);
-      expect(response.data.data.user.id).toBe("user-123");
+      expect(response.data.data.user.id).toBe('user-123');
       expect(mockedAxios.post).toHaveBeenCalledWith(
         `${API_URL}/api/crime/${crimeId}/comments`,
         commentData,
         {
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
           },
         }
       );
     });
 
-    it("should return 400 if comment content is empty", async () => {
+    it('should return 400 if comment content is empty', async () => {
       // Mock bad request response
       mockedAxios.post.mockRejectedValue({
         response: {
           status: 400,
-          data: { message: "Comment content is required." },
+          data: { message: 'Comment content is required.' },
         },
         isAxiosError: true,
       });
@@ -729,19 +729,19 @@ describe("Crime API Endpoints", () => {
         // Execute request with empty content
         await axios.post(
           `${API_URL}/api/crime/${crimeId}/comments`,
-          { content: "" },
+          { content: '' },
           {
             headers: {
-              "Content-Type": "application/json",
+              'Content-Type': 'application/json',
             },
           }
         );
-        fail("Expected request to fail with 400 status");
+        fail('Expected request to fail with 400 status');
       } catch (error: any) {
         if (error.response) {
           expect(error.response.status).toBe(400);
           expect(error.response.data).toEqual({
-            message: "Comment content is required.",
+            message: 'Comment content is required.',
           });
         } else {
           throw error;
@@ -749,7 +749,7 @@ describe("Crime API Endpoints", () => {
       }
     });
 
-    it("should return 401 if user is not authenticated", async () => {
+    it('should return 401 if user is not authenticated', async () => {
       // Mock unauthorized user
       mockedCurrentUser.mockResolvedValue(null);
 
@@ -757,7 +757,7 @@ describe("Crime API Endpoints", () => {
       mockedAxios.post.mockRejectedValue({
         response: {
           status: 401,
-          data: { error: "Unauthorized!" },
+          data: { error: 'Unauthorized!' },
         },
         isAxiosError: true,
       });
@@ -769,29 +769,29 @@ describe("Crime API Endpoints", () => {
           commentData,
           {
             headers: {
-              "Content-Type": "application/json",
+              'Content-Type': 'application/json',
             },
           }
         );
-        fail("Expected request to fail with 401 status");
+        fail('Expected request to fail with 401 status');
       } catch (error: any) {
         if (error.response) {
           expect(error.response.status).toBe(401);
-          expect(error.response.data).toEqual({ error: "Unauthorized!" });
+          expect(error.response.data).toEqual({ error: 'Unauthorized!' });
         } else {
           throw error;
         }
       }
     });
 
-    it("should return 404 if crime not found", async () => {
-      const nonExistentCrimeId = "non-existent-id";
+    it('should return 404 if crime not found', async () => {
+      const nonExistentCrimeId = 'non-existent-id';
 
       // Mock not found response
       mockedAxios.post.mockRejectedValue({
         response: {
           status: 404,
-          data: { message: "Crime not found." },
+          data: { message: 'Crime not found.' },
         },
         isAxiosError: true,
       });
@@ -803,15 +803,15 @@ describe("Crime API Endpoints", () => {
           commentData,
           {
             headers: {
-              "Content-Type": "application/json",
+              'Content-Type': 'application/json',
             },
           }
         );
-        fail("Expected request to fail with 404 status");
+        fail('Expected request to fail with 404 status');
       } catch (error: any) {
         if (error.response) {
           expect(error.response.status).toBe(404);
-          expect(error.response.data).toEqual({ message: "Crime not found." });
+          expect(error.response.data).toEqual({ message: 'Crime not found.' });
         } else {
           throw error;
         }
@@ -819,35 +819,35 @@ describe("Crime API Endpoints", () => {
     });
   });
 
-  describe("GET /api/crime/:id/comments", () => {
-    const crimeId = "crime-id-123";
+  describe('GET /api/crime/:id/comments', () => {
+    const crimeId = 'crime-id-123';
 
-    it("should return all comments for a crime", async () => {
+    it('should return all comments for a crime', async () => {
       // Mock comments data
       const mockComments = [
         {
-          id: "comment1",
-          content: "First comment",
+          id: 'comment1',
+          content: 'First comment',
           crimeId,
-          userId: "user1",
+          userId: 'user1',
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
-          user: { id: "user1", name: "John Doe" },
+          user: { id: 'user1', name: 'John Doe' },
         },
         {
-          id: "comment2",
-          content: "Second comment",
+          id: 'comment2',
+          content: 'Second comment',
           crimeId,
-          userId: "user2",
+          userId: 'user2',
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
-          user: { id: "user2", name: "Jane Doe" },
+          user: { id: 'user2', name: 'Jane Doe' },
         },
       ];
 
       const mockResponse = {
         data: {
-          message: "Comments fetched successfully.",
+          message: 'Comments fetched successfully.',
           data: mockComments,
           status: 200,
         },
@@ -863,7 +863,7 @@ describe("Crime API Endpoints", () => {
 
       // Assertions
       expect(response.status).toBe(200);
-      expect(response.data.message).toBe("Comments fetched successfully.");
+      expect(response.data.message).toBe('Comments fetched successfully.');
       expect(response.data.data).toHaveLength(2);
       expect(response.data.data[0].crimeId).toBe(crimeId);
       expect(response.data.data[1].crimeId).toBe(crimeId);
@@ -872,14 +872,14 @@ describe("Crime API Endpoints", () => {
       );
     });
 
-    it("should return 404 if crime not found", async () => {
-      const nonExistentCrimeId = "non-existent-id";
+    it('should return 404 if crime not found', async () => {
+      const nonExistentCrimeId = 'non-existent-id';
 
       // Mock not found response
       mockedAxios.get.mockRejectedValue({
         response: {
           status: 404,
-          data: { message: "Crime not found." },
+          data: { message: 'Crime not found.' },
         },
         isAxiosError: true,
       });
@@ -887,22 +887,22 @@ describe("Crime API Endpoints", () => {
       try {
         // Execute request
         await axios.get(`${API_URL}/api/crime/${nonExistentCrimeId}/comments`);
-        fail("Expected request to fail with 404 status");
+        fail('Expected request to fail with 404 status');
       } catch (error: any) {
         if (error.response) {
           expect(error.response.status).toBe(404);
-          expect(error.response.data).toEqual({ message: "Crime not found." });
+          expect(error.response.data).toEqual({ message: 'Crime not found.' });
         } else {
           throw error;
         }
       }
     });
 
-    it("should return empty array if no comments exist", async () => {
+    it('should return empty array if no comments exist', async () => {
       // Mock empty comments response
       const mockResponse = {
         data: {
-          message: "Comments fetched successfully.",
+          message: 'Comments fetched successfully.',
           data: [],
           status: 200,
         },

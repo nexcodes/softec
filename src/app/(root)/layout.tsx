@@ -1,6 +1,6 @@
-import React from "react";
-import Header from "./_components/header";
-import Footer from "./_components/Footer";
+import React from 'react';
+import Footer from './_components/Footer';
+import Header from './_components/header';
 
 export default function RootLayout({
   children,
