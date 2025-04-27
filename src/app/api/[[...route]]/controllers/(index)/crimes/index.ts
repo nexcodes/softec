@@ -27,6 +27,39 @@ const app = new Hono()
       status: 200,
     });
   })
+  .get("/locations", async (c) => {
+    try {
+      const crimes = await db.crime.findMany({
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          location: true,
+          latitude: true,
+          longitude: true,
+          reportedAt: true,
+          crimeType: true,
+          incidentDate: true,
+        },
+      });
+
+      return c.json(
+        {
+          message: "Crime locations retrieved successfully.",
+          data: crimes,
+        },
+        200
+      );
+    } catch (error) {
+      console.error("Error fetching crime locations:", error);
+      return c.json(
+        {
+          message: "Failed to fetch crime locations.",
+        },
+        500
+      );
+    }
+  })
   .post("/", zValidator("json", createCrimeSchema), async (c) => {
     const body = await c.req.valid("json");
     const user = await currentUser();
