@@ -1,5 +1,6 @@
-import axios from 'axios';
+import { currentUser } from '@/lib/current-user';
 import { jest } from '@jest/globals';
+import axios from 'axios';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
@@ -11,8 +12,9 @@ const mockedAxios = axios as jest.Mocked<typeof axios>;
 jest.mock('@/lib/current-user', () => ({
   currentUser: jest.fn(),
 }));
-import { currentUser } from '@/lib/current-user';
-const mockedCurrentUser = currentUser as jest.MockedFunction<typeof currentUser>;
+const mockedCurrentUser = currentUser as jest.MockedFunction<
+  typeof currentUser
+>;
 
 describe('Lawyer API Endpoints', () => {
   beforeEach(() => {
@@ -62,7 +64,9 @@ describe('Lawyer API Endpoints', () => {
 
       // Assertions
       expect(response.status).toBe(200);
-      expect(response.data.message).toBe('Verified lawyers retrieved successfully.');
+      expect(response.data.message).toBe(
+        'Verified lawyers retrieved successfully.'
+      );
       expect(response.data.data).toEqual(mockLawyers);
       expect(response.data.metadata).toEqual({
         page: 1,
@@ -145,7 +149,9 @@ describe('Lawyer API Endpoints', () => {
         totalPages: 2,
         totalLawyers: 11,
       });
-      expect(mockedAxios.get).toHaveBeenCalledWith(`${API_URL}/api/lawyer?page=2&limit=10`);
+      expect(mockedAxios.get).toHaveBeenCalledWith(
+        `${API_URL}/api/lawyer?page=2&limit=10`
+      );
     });
   });
 
@@ -262,7 +268,9 @@ describe('Lawyer API Endpoints', () => {
       } catch (error: any) {
         if (error.response) {
           expect(error.response.status).toBe(400);
-          expect(error.response.data).toEqual({ error: 'You are already registered as a lawyer' });
+          expect(error.response.data).toEqual({
+            error: 'You are already registered as a lawyer',
+          });
         } else {
           throw error;
         }
@@ -294,7 +302,9 @@ describe('Lawyer API Endpoints', () => {
       } catch (error: any) {
         if (error.response) {
           expect(error.response.status).toBe(403);
-          expect(error.response.data).toEqual({ error: 'Forbidden for your role' });
+          expect(error.response.data).toEqual({
+            error: 'Forbidden for your role',
+          });
         } else {
           throw error;
         }
@@ -370,15 +380,11 @@ describe('Lawyer API Endpoints', () => {
 
       try {
         // Execute request
-        await axios.put(
-          `${API_URL}/api/lawyer/lawyer/profile`,
-          updateData,
-          {
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          }
-        );
+        await axios.put(`${API_URL}/api/lawyer/lawyer/profile`, updateData, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
         fail('Expected request to fail with 401 status');
       } catch (error: any) {
         if (error.response) {
@@ -402,20 +408,18 @@ describe('Lawyer API Endpoints', () => {
 
       try {
         // Execute request
-        await axios.put(
-          `${API_URL}/api/lawyer/lawyer/profile`,
-          updateData,
-          {
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          }
-        );
+        await axios.put(`${API_URL}/api/lawyer/lawyer/profile`, updateData, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
         fail('Expected request to fail with 403 status');
       } catch (error: any) {
         if (error.response) {
           expect(error.response.status).toBe(403);
-          expect(error.response.data).toEqual({ error: 'Only a Lawyer can update their profile' });
+          expect(error.response.data).toEqual({
+            error: 'Only a Lawyer can update their profile',
+          });
         } else {
           throw error;
         }
@@ -434,20 +438,18 @@ describe('Lawyer API Endpoints', () => {
 
       try {
         // Execute request
-        await axios.put(
-          `${API_URL}/api/lawyer/lawyer/profile`,
-          updateData,
-          {
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          }
-        );
+        await axios.put(`${API_URL}/api/lawyer/lawyer/profile`, updateData, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
         fail('Expected request to fail with 404 status');
       } catch (error: any) {
         if (error.response) {
           expect(error.response.status).toBe(404);
-          expect(error.response.data).toEqual({ error: 'Lawyer profile not found' });
+          expect(error.response.data).toEqual({
+            error: 'Lawyer profile not found',
+          });
         } else {
           throw error;
         }
@@ -473,7 +475,9 @@ describe('Lawyer API Endpoints', () => {
       // Assertions
       expect(response.status).toBe(200);
       expect(response.data.message).toBe('Lawyer deleted successfully.');
-      expect(mockedAxios.delete).toHaveBeenCalledWith(`${API_URL}/api/lawyer/lawyers`);
+      expect(mockedAxios.delete).toHaveBeenCalledWith(
+        `${API_URL}/api/lawyer/lawyers`
+      );
     });
 
     it('should return 401 if user is not authenticated', async () => {
@@ -546,13 +550,17 @@ describe('Lawyer API Endpoints', () => {
       mockedAxios.get.mockResolvedValue(mockResponse);
 
       // Execute request
-      const response = await axios.get(`${API_URL}/api/lawyer/lawyers/lawyer123`);
+      const response = await axios.get(
+        `${API_URL}/api/lawyer/lawyers/lawyer123`
+      );
 
       // Assertions
       expect(response.status).toBe(200);
       expect(response.data.message).toBe('Lawyer retrieved successfully.');
       expect(response.data.data).toEqual(mockLawyer);
-      expect(mockedAxios.get).toHaveBeenCalledWith(`${API_URL}/api/lawyer/lawyers/lawyer123`);
+      expect(mockedAxios.get).toHaveBeenCalledWith(
+        `${API_URL}/api/lawyer/lawyers/lawyer123`
+      );
     });
 
     it('should return 404 if lawyer not found', async () => {
@@ -607,7 +615,9 @@ describe('Lawyer API Endpoints', () => {
       mockedAxios.get.mockResolvedValue(mockResponse);
 
       // Execute request
-      const response = await axios.get(`${API_URL}/api/lawyer/lawyers/search?specialization=Criminal`);
+      const response = await axios.get(
+        `${API_URL}/api/lawyer/lawyers/search?specialization=Criminal`
+      );
 
       // Assertions
       expect(response.status).toBe(200);
@@ -617,7 +627,9 @@ describe('Lawyer API Endpoints', () => {
         page: 1,
         limit: 10,
       });
-      expect(mockedAxios.get).toHaveBeenCalledWith(`${API_URL}/api/lawyer/lawyers/search?specialization=Criminal`);
+      expect(mockedAxios.get).toHaveBeenCalledWith(
+        `${API_URL}/api/lawyer/lawyers/search?specialization=Criminal`
+      );
     });
 
     it('should support pagination in search', async () => {
@@ -646,7 +658,9 @@ describe('Lawyer API Endpoints', () => {
       mockedAxios.get.mockResolvedValue(mockResponse);
 
       // Execute request with pagination
-      const response = await axios.get(`${API_URL}/api/lawyer/lawyers/search?specialization=Family&page=2&limit=5`);
+      const response = await axios.get(
+        `${API_URL}/api/lawyer/lawyers/search?specialization=Family&page=2&limit=5`
+      );
 
       // Assertions
       expect(response.status).toBe(200);
@@ -654,7 +668,9 @@ describe('Lawyer API Endpoints', () => {
         page: 2,
         limit: 5,
       });
-      expect(mockedAxios.get).toHaveBeenCalledWith(`${API_URL}/api/lawyer/lawyers/search?specialization=Family&page=2&limit=5`);
+      expect(mockedAxios.get).toHaveBeenCalledWith(
+        `${API_URL}/api/lawyer/lawyers/search?specialization=Family&page=2&limit=5`
+      );
     });
   });
 });

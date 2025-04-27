@@ -1,7 +1,7 @@
-@import "tailwindcss";
-@import "tw-animate-css";
-@import "@fontsource/urbanist/400.css";
-@import "@fontsource/urbanist/700.css"; /* adjust weights as needed */
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import '@fontsource/urbanist/400.css';
+@import '@fontsource/urbanist/700.css'; /* adjust weights as needed */
 
 @custom-variant dark (&:is(.dark *));
 

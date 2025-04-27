@@ -6,7 +6,7 @@ describe('Sample API Routes', () => {
   describe('GET /api/sample', () => {
     it('should return a success message', async () => {
       const response = await axios.get(`${API_URL}/api/sample`);
-      
+
       expect(response.status).toBe(200);
       expect(response.data).toEqual({ message: 'Sample GET Route!' });
     });
@@ -19,7 +19,10 @@ describe('Sample API Routes', () => {
       } catch (error) {
         if (axios.isAxiosError(error) && error.response) {
           expect(error.response.status).toBe(400);
-          expect(error.response.data).toEqual({ message: 'CustomError', method: 'GET' });
+          expect(error.response.data).toEqual({
+            message: 'CustomError',
+            method: 'GET',
+          });
         } else {
           throw error; // Rethrow if it's not an Axios error
         }
@@ -30,7 +33,7 @@ describe('Sample API Routes', () => {
   describe('POST /api/sample', () => {
     it('should return a success message', async () => {
       const response = await axios.post(`${API_URL}/api/sample`);
-      
+
       expect(response.status).toBe(200);
       expect(response.data).toEqual({ message: 'Sample POST Route!' });
     });
@@ -42,7 +45,10 @@ describe('Sample API Routes', () => {
       } catch (error) {
         if (axios.isAxiosError(error) && error.response) {
           expect(error.response.status).toBe(400);
-          expect(error.response.data).toEqual({ message: 'CustomError', method: 'POST' });
+          expect(error.response.data).toEqual({
+            message: 'CustomError',
+            method: 'POST',
+          });
         } else {
           throw error;
         }
@@ -53,7 +59,7 @@ describe('Sample API Routes', () => {
   describe('PATCH /api/sample', () => {
     it('should return a success message', async () => {
       const response = await axios.patch(`${API_URL}/api/sample`);
-      
+
       expect(response.status).toBe(200);
       expect(response.data).toEqual({ message: 'Sample PATCH Route!' });
     });
@@ -65,7 +71,10 @@ describe('Sample API Routes', () => {
       } catch (error) {
         if (axios.isAxiosError(error) && error.response) {
           expect(error.response.status).toBe(400);
-          expect(error.response.data).toEqual({ message: 'CustomError', method: 'PATCH' });
+          expect(error.response.data).toEqual({
+            message: 'CustomError',
+            method: 'PATCH',
+          });
         } else {
           throw error;
         }
@@ -76,7 +85,7 @@ describe('Sample API Routes', () => {
   describe('DELETE /api/sample', () => {
     it('should return a success message', async () => {
       const response = await axios.delete(`${API_URL}/api/sample`);
-      
+
       expect(response.status).toBe(200);
       expect(response.data).toEqual({ message: 'Sample DELETE Route!' });
     });
@@ -88,7 +97,10 @@ describe('Sample API Routes', () => {
       } catch (error) {
         if (axios.isAxiosError(error) && error.response) {
           expect(error.response.status).toBe(400);
-          expect(error.response.data).toEqual({ message: 'CustomError', method: 'DELETE' });
+          expect(error.response.data).toEqual({
+            message: 'CustomError',
+            method: 'DELETE',
+          });
         } else {
           throw error;
         }

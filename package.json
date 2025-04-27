@@ -16,7 +16,9 @@
     "docker:build:dev": "docker-compose build --no-cache app-dev",
     "docker:prod": "docker-compose up app-prod",
     "docker:build:prod": "docker-compose build --no-cache app-prod",
-    "seed": "tsx seed/seed.ts"
+    "seed": "tsx seed/seed.ts",
+    "format": "prettier --check --ignore-path .gitignore .",
+    "format:fix": "prettier --write --ignore-path .gitignore ."
   },
   "dependencies": {
     "@edgestore/react": "^0.3.3",
@@ -55,7 +57,9 @@
     "@react-google-maps/api": "^2.20.6",
     "@tanstack/react-query": "^5.74.4",
     "@tanstack/react-table": "^8.21.3",
+    "@types/bcrypt": "^5.0.2",
     "axios": "^1.8.4",
+    "bcrypt": "^5.1.1",
     "bcryptjs": "^3.0.2",
     "better-auth": "^1.2.7",
     "class-variance-authority": "^0.7.1",
@@ -98,7 +102,11 @@
     "@types/supertest": "^6.0.3",
     "eslint": "^9",
     "eslint-config-next": "15.3.0",
+    "eslint-config-prettier": "^10.1.2",
     "jest": "^29.7.0",
+    "prettier": "^3.5.3",
+    "prettier-plugin-organize-imports": "^4.1.0",
+    "prettier-plugin-tailwindcss": "^0.6.11",
     "prisma": "6.6.0",
     "supertest": "^7.1.0",
     "tailwindcss": "^4",

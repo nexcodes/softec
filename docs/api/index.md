@@ -34,27 +34,41 @@ To create a new API resource (e.g., users, products), follow these steps:
 Each resource should export a Hono app instance with defined routes. Here's an example based on the sample implementation:
 
 ```typescript
-import { Hono } from "hono";
-import { zValidator } from "@hono/zod-validator";
-import { z } from "zod";
+import { Hono } from 'hono';
+import { zValidator } from '@hono/zod-validator';
+import { z } from 'zod';
 
 const app = new Hono()
   // GET route with validation
   .get(
-    "/",
-    zValidator("query", z.object({ /* validation schema */ })),
+    '/',
+    zValidator(
+      'query',
+      z.object({
+        /* validation schema */
+      })
+    ),
     (c) => {
       // Route handler logic
-      return c.json({ /* response data */ });
+      return c.json({
+        /* response data */
+      });
     }
   )
   // POST route
   .post(
-    "/",
-    zValidator("body", z.object({ /* validation schema */ })),
+    '/',
+    zValidator(
+      'body',
+      z.object({
+        /* validation schema */
+      })
+    ),
     (c) => {
       // Route handler logic
-      return c.json({ /* response data */ });
+      return c.json({
+        /* response data */
+      });
     }
   );
 
@@ -67,12 +81,12 @@ After creating your resource routes, register them in the main `route.ts` file:
 
 ```typescript
 // In src/app/api/[[...route]]/route.ts
-import { sample } from "./controllers/(index)";
-import { yourNewResource } from "./controllers/(index)";
+import { sample } from './controllers/(index)';
+import { yourNewResource } from './controllers/(index)';
 
 const routes = app
-  .route("/sample", sample)
-  .route("/your-resource-path", yourNewResource);
+  .route('/sample', sample)
+  .route('/your-resource-path', yourNewResource);
 ```
 
 ## Validation
@@ -84,12 +98,13 @@ The project uses Zod with Hono's zValidator for request validation:
 3. Access validated data with `c.req.valid()`
 
 Example:
+
 ```typescript
-zValidator("query", z.object({ id: z.string() })),
-(c) => {
-  const { id } = c.req.valid("query");
-  // Use validated id safely
-}
+zValidator('query', z.object({ id: z.string() })),
+  (c) => {
+    const { id } = c.req.valid('query');
+    // Use validated id safely
+  };
 ```
 
 ## Error Handling
@@ -101,7 +116,7 @@ Error handling is centralized in the main route file with `app.onError`. Throw `
 The API can be consumed client-side using the Hono client:
 
 ```typescript
-import { client } from "@/lib/hono";
+import { client } from '@/lib/hono';
 
 // Example usage
 const response = await client.sample.$get();

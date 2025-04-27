@@ -1,5 +1,5 @@
-import { headers } from "next/headers";
-import { auth } from "./auth";
+import { headers } from 'next/headers';
+import { auth } from './auth';
 
 /**
  * Retrieves the current authenticated user from the session
@@ -18,7 +18,7 @@ export async function currentUser() {
 
     return user;
   } catch (error) {
-    console.error("Failed to get current user:", error);
+    console.error('Failed to get current user:', error);
     return null;
   }
 }

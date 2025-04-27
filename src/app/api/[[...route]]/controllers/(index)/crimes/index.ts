@@ -1,35 +1,41 @@
-import { Hono } from "hono";
-import { zValidator } from "@hono/zod-validator";
-import { z } from "zod";
-import { db } from "@/lib/db";
+import { currentUser } from '@/lib/current-user';
+import { db } from '@/lib/db';
 import {
-  createCrimeSchema,
-  updateCrimeSchema,
-  searchCrimeSchema,
-  voteSchema,
   createCommentSchema,
+  createCrimeSchema,
   idParamSchema,
-} from "@/schema";
-import { currentUser } from "@/lib/current-user";
+  searchCrimeSchema,
+  updateCrimeSchema,
+  voteSchema,
+} from '@/schema';
+import { zValidator } from '@hono/zod-validator';
+import { Hono } from 'hono';
+import { z } from 'zod';
 
 const app = new Hono()
-  .get("/", async (c) => {
+  .get('/', async (c) => {
     const crimes = await db.crime.findMany({
-      orderBy: { createdAt: "desc" },
+      where: {
+        isLive: true,
+      },
+      orderBy: { createdAt: 'desc' },
       include: {
         media: true,
       },
     });
 
     return c.json({
-      message: "Crimes retrieved successfully.",
+      message: 'Crimes retrieved successfully.',
       data: crimes,
       status: 200,
     });
   })
-  .get("/locations", async (c) => {
+  .get('/locations', async (c) => {
     try {
       const crimes = await db.crime.findMany({
+        where: {
+          isLive: true,
+        },
         select: {
           id: true,
           title: true,
@@ -45,27 +51,27 @@ const app = new Hono()
 
       return c.json(
         {
-          message: "Crime locations retrieved successfully.",
+          message: 'Crime locations retrieved successfully.',
           data: crimes,
         },
         200
       );
     } catch (error) {
-      console.error("Error fetching crime locations:", error);
+      console.error('Error fetching crime locations:', error);
       return c.json(
         {
-          message: "Failed to fetch crime locations.",
+          message: 'Failed to fetch crime locations.',
         },
         500
       );
     }
   })
-  .post("/", zValidator("json", createCrimeSchema), async (c) => {
-    const body = await c.req.valid("json");
+  .post('/', zValidator('json', createCrimeSchema), async (c) => {
+    const body = await c.req.valid('json');
     const user = await currentUser();
 
     if (!user || !user.id) {
-      return c.json({ error: "Unauthorized!" }, 401);
+      return c.json({ error: 'Unauthorized!' }, 401);
     }
 
     const newCrime = await db.crime.create({
@@ -73,18 +79,18 @@ const app = new Hono()
     });
 
     return c.json({
-      message: "Crime created successfully.",
+      message: 'Crime created successfully.',
       data: newCrime,
       status: 201,
     });
   })
   .put(
-    "/:id",
-    zValidator("param", idParamSchema),
-    zValidator("json", updateCrimeSchema),
+    '/:id',
+    zValidator('param', idParamSchema),
+    zValidator('json', updateCrimeSchema),
     async (c) => {
-      const { id: crimeId } = c.req.valid("param");
-      const body = await c.req.valid("json");
+      const { id: crimeId } = c.req.valid('param');
+      const body = await c.req.valid('json');
 
       const updatedCrime = await db.crime.update({
         where: { id: crimeId },
@@ -96,23 +102,23 @@ const app = new Hono()
       });
 
       return c.json({
-        message: "Crime updated successfully.",
+        message: 'Crime updated successfully.',
         data: updatedCrime,
       });
     }
   )
-  .get("/search", zValidator("query", searchCrimeSchema), async (c) => {
-    const { query } = c.req.valid("query");
+  .get('/search', zValidator('query', searchCrimeSchema), async (c) => {
+    const { query } = c.req.valid('query');
 
     const crimes = await db.crime.findMany({
       where: {
         OR: [
-          { title: { contains: query, mode: "insensitive" } },
-          { description: { contains: query, mode: "insensitive" } },
-          { location: { contains: query, mode: "insensitive" } },
+          { title: { contains: query, mode: 'insensitive' } },
+          { description: { contains: query, mode: 'insensitive' } },
+          { location: { contains: query, mode: 'insensitive' } },
         ],
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
       include: {
         media: true,
         comments: { include: { user: true } },
@@ -137,13 +143,47 @@ const app = new Hono()
     });
 
     return c.json({
-      message: "Search successful.",
+      message: 'Search successful.',
       data: formattedCrimes,
       status: 200,
     });
   })
-  .get("/:id", zValidator("param", idParamSchema), async (c) => {
-    const id = c.req.valid("param").id;
+  .get('/:id/comments', zValidator('param', idParamSchema), async (c) => {
+    const { id: crimeId } = c.req.valid('param');
+
+    const crime = await db.crime.findUnique({ where: { id: crimeId } });
+    if (!crime) {
+      return c.json({ message: 'Crime not found.' }, 404);
+    }
+
+    const comments = await db.comment.findMany({
+      where: { crimeId },
+      include: {
+        user: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    return c.json({
+      message: 'Comments fetched successfully.',
+      data: comments,
+      status: 200,
+    });
+  })
+  .get('/map', async (c) => {
+    const crimes = await db.crime.findMany({
+      where: { isLive: true },
+    });
+
+    return c.json({
+      message: 'Crimes fetched successfully.',
+      data: crimes,
+    });
+  })
+  .get('/:id', zValidator('param', idParamSchema), async (c) => {
+    const id = c.req.valid('param').id;
 
     const crime = await db.crime.findUnique({
       where: { id },
@@ -154,25 +194,25 @@ const app = new Hono()
     });
 
     if (!crime) {
-      return c.json({ message: "Crime not found." }, 404);
+      return c.json({ message: 'Crime not found.' }, 404);
     }
 
     return c.json({
-      message: "Crime retrieved successfully.",
+      message: 'Crime retrieved successfully.',
       data: crime,
     });
   })
   .post(
-    "/:id/vote",
-    zValidator("param", idParamSchema),
-    zValidator("json", voteSchema),
+    '/:id/vote',
+    zValidator('param', idParamSchema),
+    zValidator('json', voteSchema),
     async (c) => {
       const user = await currentUser();
-      const crimeId = c.req.valid("param").id;
-      const { value } = await c.req.valid("json");
+      const crimeId = c.req.valid('param').id;
+      const { value } = await c.req.valid('json');
 
       if (!user || !user.id) {
-        return c.json({ error: "Unauthorized!" }, 401);
+        return c.json({ error: 'Unauthorized!' }, 401);
       }
 
       const existingVote = await db.vote.findUnique({
@@ -192,7 +232,7 @@ const app = new Hono()
             value,
           },
         });
-        return c.json({ message: "Vote recorded.", data: vote, status: 201 });
+        return c.json({ message: 'Vote recorded.', data: vote, status: 201 });
       }
 
       if (existingVote.value === value) {
@@ -204,7 +244,7 @@ const app = new Hono()
             },
           },
         });
-        return c.json({ message: "Vote removed.", status: 200 });
+        return c.json({ message: 'Vote removed.', status: 200 });
       }
 
       const updatedVote = await db.vote.update({
@@ -220,43 +260,43 @@ const app = new Hono()
       });
 
       return c.json({
-        message: "Vote updated.",
+        message: 'Vote updated.',
         data: updatedVote,
         status: 200,
       });
     }
   )
   .post(
-    "/:id/comments",
-    zValidator("param", z.object({ id: z.string().optional() })),
-    zValidator("json", createCommentSchema),
+    '/:id/comments',
+    zValidator('param', z.object({ id: z.string().optional() })),
+    zValidator('json', createCommentSchema),
     async (c) => {
       const user = await currentUser();
-      const crimeId = c.req.valid("param").id;
-      const { content } = await c.req.valid("json");
+      const crimeId = c.req.valid('param').id;
+      const { content } = await c.req.valid('json');
 
       if (!crimeId) {
-        return c.json({ message: "Crime ID is required." }, 400);
+        return c.json({ message: 'Crime ID is required.' }, 400);
       }
 
       if (!content) {
-        return c.json({ message: "Comment content is required." }, 400);
+        return c.json({ message: 'Comment content is required.' }, 400);
       }
 
       if (!user || !user.id) {
-        return c.json({ error: "Unauthorized!" }, 401);
+        return c.json({ error: 'Unauthorized!' }, 401);
       }
 
       // Check if user exists
       const dbUser = await db.user.findUnique({ where: { id: user.id } });
       if (!dbUser) {
-        return c.json({ message: "User not found." }, 404);
+        return c.json({ message: 'User not found.' }, 404);
       }
 
       // Check if crime exists
       const crime = await db.crime.findUnique({ where: { id: crimeId } });
       if (!crime) {
-        return c.json({ message: "Crime not found." }, 404);
+        return c.json({ message: 'Crime not found.' }, 404);
       }
 
       const comment = await db.comment.create({
@@ -271,56 +311,11 @@ const app = new Hono()
       });
 
       return c.json({
-        message: "Comment created.",
+        message: 'Comment created.',
         data: comment,
         status: 201,
       });
     }
-  )
-  .get("/:id/comments", zValidator("param", idParamSchema), async (c) => {
-    const { id: crimeId } = c.req.valid("param");
-
-    const crime = await db.crime.findUnique({ where: { id: crimeId } });
-    if (!crime) {
-      return c.json({ message: "Crime not found." }, 404);
-    }
-
-    const comments = await db.comment.findMany({
-      where: { crimeId },
-      include: {
-        user: true,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
-
-    return c.json({
-      message: "Comments fetched successfully.",
-      data: comments,
-      status: 200,
-    });
-  })
-  .get("/map", async (c) => {
-    const crimes = await db.crime.findMany({
-      where: { isLive: true },
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        location: true,
-        latitude: true,
-        longitude: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
-
-    return c.json({
-      message: "Crimes fetched successfully.",
-      data: crimes,
-      status: 200,
-    });
-  });
+  );
 
 export default app;

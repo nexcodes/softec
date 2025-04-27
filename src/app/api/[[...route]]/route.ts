@@ -1,12 +1,12 @@
-import { Hono } from "hono";
-import { HTTPException } from "hono/http-exception";
-import { handle } from "hono/vercel";
-import { crime, lawyer, media, sample } from "./controllers/(index)";
+import { Hono } from 'hono';
+import { HTTPException } from 'hono/http-exception';
+import { handle } from 'hono/vercel';
+import { crime, lawyer, media, sample } from './controllers/(index)';
 
-const app = new Hono().basePath("/api");
+const app = new Hono().basePath('/api');
 
-app.get("/hello", (c) => {
-  return c.json({ message: "Hello, World!" });
+app.get('/hello', (c) => {
+  return c.json({ message: 'Hello, World!' });
 });
 
 app.onError((err, c) => {
@@ -16,14 +16,14 @@ app.onError((err, c) => {
     return err.getResponse();
   }
 
-  return c.json({ message: "Internal Error" }, 500);
+  return c.json({ message: 'Internal Error' }, 500);
 });
 
 const routes = app
-  .route("/sample", sample)
-  .route("/lawyer", lawyer)
-  .route("/crime", crime)
-  .route("/media", media);
+  .route('/sample', sample)
+  .route('/lawyer', lawyer)
+  .route('/crime', crime)
+  .route('/media', media);
 
 export const GET = handle(app);
 export const POST = handle(app);
