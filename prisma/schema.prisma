@@ -12,6 +12,7 @@ datasource db {
 enum Role {
   USER
   ADMIN
+  MODERATOR
   LAWYER
 }
 
@@ -104,21 +105,22 @@ model Lawyer {
 }
 
 model Crime {
-  id           String   @id @default(cuid())
+  id           String    @id @default(cuid())
   userId       String?
-  user         User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
   title        String
   description  String
   location     String
-  latitude     String
-  longitude    String
-  reportedAt   DateTime @default(now())
-  crimeType    String
+  latitude     Float
+  longitude    Float
+  placeId      String?   @default("")
+  reportedAt   DateTime  @default(now())
+  crimeType    CrimeType
   incidentDate DateTime
   isLive       Boolean
-  isVerified   Boolean? @default(false)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  isVerified   Boolean?  @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   // Relations
   media    Media[]
@@ -138,6 +140,7 @@ model Comment {
   crimeId   String
   crime     Crime    @relation(fields: [crimeId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
+  pinned    Boolean  @default(false)
 
   @@map("comment")
 }
@@ -157,8 +160,8 @@ model Vote {
 
 model Media {
   id         String    @id @default(cuid())
-  url        String // URL to the image or video
-  type       MediaType // ENUM: IMAGE or VIDEO
+  url        String
+  type       MediaType
   crimeId    String
   crime      Crime     @relation(fields: [crimeId], references: [id], onDelete: Cascade)
   uploadedAt DateTime  @default(now())
@@ -169,4 +172,21 @@ model Media {
 enum MediaType {
   IMAGE
   VIDEO
+  OTHER
+}
+
+enum CrimeType {
+  HOMICIDE
+  ASSAULT
+  THEFT
+  ROBBERY
+  BURGLARY
+  ARSON
+  VANDALISM
+  FRAUD
+  EMBEZZLEMENT
+  KIDNAPPING
+  CYBERCRIME
+  DRUG_TRAFFICKING
+  RAPE
 }

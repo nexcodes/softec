@@ -5,10 +5,10 @@ const es = initEdgeStore.create();
  * This is the main router for the EdgeStore buckets.
  */
 const edgeStoreRouter = es.router({
-    publicFiles: es.fileBucket(),
+  publicFiles: es.fileBucket(),
 });
 const handler = createEdgeStoreNextHandler({
-    router: edgeStoreRouter,
+  router: edgeStoreRouter,
 });
 export { handler as GET, handler as POST };
 /**

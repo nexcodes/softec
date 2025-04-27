@@ -3,7 +3,14 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FaShieldAlt, FaBars, FaTimes, FaSearch, FaUser, FaBell } from "react-icons/fa";
+import {
+  FaShieldAlt,
+  FaBars,
+  FaTimes,
+  FaSearch,
+  FaUser,
+  FaBell,
+} from "react-icons/fa";
 import Logo from "@/components/logo";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -37,17 +44,18 @@ const Header = () => {
 
   const navLinks = [
     { name: "Home", path: "/" },
-    { name: "Report", path: "/report" },
-    { name: "Consultancy", path: "/lawyer" },
     { name: "About", path: "/about" },
-    { name: "Contact", path: "/contact" },
-    { name: "Explore", path: "/communities" },
+    { name: "Report", path: "/report" },
+    { name: "Analytics", path: "/analytics" },
+    // { name: "Consultancy", path: "/lawyer" },
   ];
 
   return (
     <header
       className={`fixed w-full z-50 transition-all duration-300 pt-2 ${
-        isScrolled ? "bg-gray-900/95 backdrop-blur-md py-2 shadow-lg" : "bg-transparent py-4"
+        isScrolled
+          ? "bg-gray-900/95 backdrop-blur-md py-2 shadow-lg"
+          : "bg-transparent py-4"
       }`}
     >
       <div className="max-w-6xl mx-auto px-6 py-0">
@@ -98,8 +106,6 @@ const Header = () => {
             <button className="text-gray-300 hover:text-white transition-colors">
               <FaSearch />
             </button>
-            
-              
 
             {/* Auth Section */}
             {!!user ? (
@@ -117,7 +123,10 @@ const Header = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button variant="secondary" onClick={() => router.push("/auth/sign-in")}>
+              <Button
+                variant="secondary"
+                onClick={() => router.push("/auth/sign-in")}
+              >
                 <FaUser className="mr-2" />
                 Sign In
               </Button>
@@ -166,8 +175,13 @@ const Header = () => {
           <div className="pt-4">
             {!!user ? (
               <div className="flex justify-between items-center px-4">
-                <span className="text-white">Hi, {user.name.split(" ")[0]}</span>
-                <Button variant="destructive" onClick={() => authClient.signOut()}>
+                <span className="text-white">
+                  Hi, {user.name.split(" ")[0]}
+                </span>
+                <Button
+                  variant="destructive"
+                  onClick={() => authClient.signOut()}
+                >
                   Sign Out
                 </Button>
               </div>

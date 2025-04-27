@@ -18,53 +18,25 @@ const app = new Hono()
       orderBy: { createdAt: "desc" },
       include: {
         media: true,
-        comments: {
-          include: {
-            user: true,
-          },
-        },
-        votes: {
-          include: {
-            user: true,
-          },
-        },
-        user: true,
       },
-    });
-
-    const formattedCrimes = crimes.map((crime) => {
-      const totalVotes = crime.votes.length;
-      const upvotes = crime.votes.filter((v) => v.value === true).length;
-      const downvotes = totalVotes - upvotes;
-
-      return {
-        ...crime,
-        voteStats: {
-          total: totalVotes,
-          upvotes,
-          downvotes,
-        },
-      };
     });
 
     return c.json({
       message: "Crimes retrieved successfully.",
-      data: formattedCrimes,
+      data: crimes,
       status: 200,
     });
   })
   .post("/", zValidator("json", createCrimeSchema), async (c) => {
     const body = await c.req.valid("json");
-    const { title, description, location, userId, isLive } = body;
+    const user = await currentUser();
+
+    if (!user || !user.id) {
+      return c.json({ error: "Unauthorized!" }, 401);
+    }
 
     const newCrime = await db.crime.create({
-      data: {
-        title,
-        description,
-        location,
-        isLive,
-        user: userId ? { connect: { id: userId } } : undefined,
-      },
+      data: { ...body, isLive: true, userId: user.id },
     });
 
     return c.json({
@@ -144,17 +116,7 @@ const app = new Hono()
       where: { id },
       include: {
         media: true,
-        comments: {
-          include: {
-            user: true,
-          },
-        },
-        votes: {
-          include: {
-            user: true,
-          },
-        },
-        user: true,
+        comments: true,
       },
     });
 
@@ -162,21 +124,9 @@ const app = new Hono()
       return c.json({ message: "Crime not found." }, 404);
     }
 
-    const totalVotes = crime.votes.length;
-    const upvotes = crime.votes.filter((v) => v.value === true).length;
-    const downvotes = totalVotes - upvotes;
-
     return c.json({
       message: "Crime retrieved successfully.",
-      data: {
-        ...crime,
-        voteStats: {
-          total: totalVotes,
-          upvotes,
-          downvotes,
-        },
-      },
-      status: 200,
+      data: crime,
     });
   })
   .post(
@@ -245,12 +195,16 @@ const app = new Hono()
   )
   .post(
     "/:id/comments",
-    zValidator("param", idParamSchema),
+    zValidator("param", z.object({ id: z.string().optional() })),
     zValidator("json", createCommentSchema),
     async (c) => {
       const user = await currentUser();
       const crimeId = c.req.valid("param").id;
       const { content } = await c.req.valid("json");
+
+      if (!crimeId) {
+        return c.json({ message: "Crime ID is required." }, 400);
+      }
 
       if (!content) {
         return c.json({ message: "Comment content is required." }, 400);
@@ -311,6 +265,27 @@ const app = new Hono()
     return c.json({
       message: "Comments fetched successfully.",
       data: comments,
+      status: 200,
+    });
+  })
+  .get("/map", async (c) => {
+    const crimes = await db.crime.findMany({
+      where: { isLive: true },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        location: true,
+        latitude: true,
+        longitude: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    return c.json({
+      message: "Crimes fetched successfully.",
+      data: crimes,
       status: 200,
     });
   });

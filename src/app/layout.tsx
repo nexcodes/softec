@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { EdgeStoreProvider } from '../lib/edgestore';
+import { EdgeStoreProvider } from "../lib/edgestore";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Monda } from "next/font/google";
 import "./globals.css";
 import { Provider } from "@/components/providers";
 import { Urbanist } from "next/font/google";
 import Footer from "@/app/(root)/_components/Footer";
+import Header from "./(root)/_components/header";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -40,14 +41,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${monda.variable} ${urbanist.variable} antialiased`}
       >
         <Provider>
           <div className="flex flex-col min-h-screen">
             <main className="flex-grow">{children}</main>
-            <Footer />
           </div>
         </Provider>
       </body>

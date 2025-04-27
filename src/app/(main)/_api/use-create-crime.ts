@@ -1,32 +1,27 @@
 import { client } from "@/lib/hono";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { InferRequestType, InferResponseType } from "hono";
 import { toast } from "sonner";
 
-interface CreateCrimeData {
-  title: string;
-  description: string;
-  location: string;
-  userId?: string;
-  isLive?: boolean;
-}
+type ResponseType = InferResponseType<typeof client.api.crime.$post>;
+type RequestType = InferRequestType<typeof client.api.crime.$post>["json"];
 
 export const useCreateCrime = () => {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: async (data: CreateCrimeData) => {
+  return useMutation<ResponseType, Error, RequestType>({
+    mutationFn: async (values) => {
       const response = await client.api.crime.$post({
-        json: data,
+        json: values,
       });
 
       if (!response.ok) {
         throw new Error("Failed to create crime");
       }
 
-      const result = await response.json();
-      return result.data;
+      return await response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast.success("Crime registered successfully!");
       // Invalidate and refetch the crimes list after a successful creation
       queryClient.invalidateQueries({ queryKey: ["crimes"] });

@@ -7,5 +7,8 @@ declare namespace NodeJS {
     DATABASE_URL: string;
     GOOGLE_CLIENT_ID: string;
     GOOGLE_CLIENT_SECRET: string;
+    EDGE_STORE_ACCESS_KEY: string;
+    EDGE_STORE_SECRET_KEY: string;
+    NEXT_PUBLIC_GOOGLE_MAP_API_KEY: string;
   }
 }

@@ -1,11 +1,8 @@
 import { client } from "@/lib/hono";
 import { useQuery } from "@tanstack/react-query";
-import { InferResponseType } from "hono";
-
-type ResponseType = InferResponseType<(typeof client.api.crime)[":id"]["$get"]>;
 
 export const useGetCrime = (crimeId: string) => {
-  return useQuery<ResponseType, Error>({
+  return useQuery({
     queryKey: ["crime", crimeId],
     queryFn: async () => {
       const response = await client.api.crime[":id"]["$get"]({
@@ -15,8 +12,9 @@ export const useGetCrime = (crimeId: string) => {
       if (!response.ok) {
         throw new Error("Failed to retrieve crime");
       }
-      return response.json();
+      const { data } = await response.json();
+      return data;
     },
-    enabled: !!crimeId, // Only run the query if we have a crime ID
+    enabled: !!crimeId,
   });
 };

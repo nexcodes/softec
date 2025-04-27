@@ -1,12 +1,29 @@
+import { CrimeType } from "@prisma/client";
 import { z } from "zod";
 
 // Crime schemas
 export const createCrimeSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  description: z.string().min(1, "Description is required"),
-  location: z.string().min(1, "Location is required"),
-  userId: z.string().optional(),
-  isLive: z.boolean().default(true),
+  title: z.string().min(5, {
+    message: "Title must be at least 5 characters.",
+  }),
+  description: z.string().min(10, {
+    message: "Description must be at least 10 characters.",
+  }),
+  location: z.string().min(3, {
+    message: "Location is required.",
+  }),
+  longitude: z.coerce.number({
+    required_error: "Longitude is required.",
+  }),
+  latitude: z.coerce.number({
+    required_error: "Latitude is required.",
+  }),
+  crimeType: z.nativeEnum(CrimeType, {
+    required_error: "Please select a crime type.",
+  }),
+  incidentDate: z.coerce.date({
+    required_error: "Please select the date of the incident.",
+  }),
 });
 
 export const updateCrimeSchema = z.object({
