@@ -32,19 +32,19 @@ import useLocation from "@/hooks/use-location";
 
 // Define the Crime Type enum
 enum CrimeType {
-  HOMICIDE = "HOMICIDE",
-  ASSAULT = "ASSAULT",
-  THEFT = "THEFT",
-  ROBBERY = "ROBBERY",
-  BURGLARY = "BURGLARY",
-  ARSON = "ARSON",
-  VANDALISM = "VANDALISM",
-  FRAUD = "FRAUD",
-  EMBEZZLEMENT = "EMBEZZLEMENT",
-  KIDNAPPING = "KIDNAPPING",
-  CYBERCRIME = "CYBERCRIME",
-  DRUG_TRAFFICKING = "DRUG_TRAFFICKING",
-  RAPE = "RAPE",
+  HOMICIDE = "Homicide",
+  ASSAULT = "Assault",
+  THEFT = "Theft",
+  ROBBERY = "Robbery",
+  BURGLARY = "Burglary",
+  ARSON = "Arson",
+  VANDALISM = "Vandalism",
+  FRAUD = "Fraud",
+  EMBEZZLEMENT = "Embezzlement",
+  KIDNAPPING = "Kidnapping",
+  CYBERCRIME = "Cybercrime",
+  DRUG_TRAFFICKING = "Drug Trafficking",
+  RAPE = "Rape",
 }
 
 // Type definition for our Crime data
@@ -705,34 +705,113 @@ const CrimeMap: React.FC = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div>
-                <h3 className="text-lg font-semibold mb-2 text-gray-200">
-                  Crime Type Distribution
-                </h3>
-                <div className="bg-gray-700 p-4 rounded-lg h-80 border border-gray-600">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={crimeTypeData}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        outerRadius={80}
-                        fill="#8884d8"
-                        dataKey="value"
-                        label={({ name, percent }) =>
-                          `${name} ${(percent * 100).toFixed(0)}%`
-                        }
-                      >
-                        {crimeTypeData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip content={<CustomTooltip />} />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
+              
+  <h3 className="text-lg font-semibold mb-3 text-gray-200">
+    Crime Type Distribution
+  </h3>
+  <div className="bg-gray-700/60 p-5 rounded-xl border-t border-gray-500/30 shadow-lg backdrop-blur-sm">
+    <div className="flex flex-col md:flex-row items-center">
+      {/* Left side: Pie chart with glow effect */}
+      <div className="md:w-3/5 order-1 md:order-1 h-80 relative">
+        <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+          <div className="w-28 h-28 rounded-full bg-gray-800/80 flex flex-col items-center justify-center backdrop-blur-sm">
+            <span className="text-sm font-medium text-gray-400">Total</span>
+            <span className="text-xl font-bold text-gray-200">
+              {crimeTypeData.reduce((sum, item) => sum + item.value, 0)}
+            </span>
+          </div>
+        </div>
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <defs>
+              {crimeTypeData.map((entry, index) => (
+                <linearGradient 
+                  key={`gradient-${index}`}
+                  id={`colorGradient-${index}`} 
+                  x1="0" y1="0" 
+                  x2="0" y2="1"
+                >
+                  <stop offset="0%" stopColor={entry.color} stopOpacity={0.9}/>
+                  <stop offset="100%" stopColor={entry.color} stopOpacity={0.6}/>
+                </linearGradient>
+              ))}
+            </defs>
+            <Pie
+              data={crimeTypeData}
+              cx="50%"
+              cy="50%"
+              labelLine={false}
+              innerRadius={60}
+              outerRadius={85}
+              paddingAngle={3}
+              cornerRadius={4}
+              fill="#8884d8"
+              dataKey="value"
+              label={false}
+            >
+              {crimeTypeData.map((entry, index) => (
+                <Cell 
+                  key={`cell-${index}`} 
+                  fill={`url(#colorGradient-${index})`} 
+                  stroke="rgba(30, 41, 59, 0.5)"
+                  strokeWidth={1}
+                />
+              ))}
+            </Pie>
+            <Tooltip 
+              content={<CustomTooltip />} 
+              cursor={false}
+            />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+      
+      {/* Right side: Distribution data as elegant cards */}
+      <div className="md:w-2/5 order-2 md:order-2 mt-6 md:mt-0 md:pl-4 w-full">
+        <h4 className="text-sm font-medium text-gray-400 mb-3 pb-1 border-b border-gray-600/50 uppercase tracking-wide">
+          Breakdown
+        </h4>
+        <div className="space-y-2 max-h-64 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
+          {crimeTypeData
+            .sort((a, b) => b.value - a.value)
+            .map((entry, index) => {
+              const total = crimeTypeData.reduce((sum, type) => sum + type.value, 0);
+              const percentage = Math.round((entry.value / total) * 100);
+              
+              return (
+                <div 
+                  key={index} 
+                  className="flex items-center bg-gray-800/60 hover:bg-gray-800/80 p-2 rounded-lg transition-all duration-200 backdrop-blur-sm border border-gray-700/50"
+                >
+                  <div 
+                    className="w-2 h-full min-h-[30px] rounded-l-md mr-2" 
+                    style={{ backgroundColor: entry.color }}
+                  ></div>
+                  <div className="flex-1">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-gray-200">{entry.name}</span>
+                      <div className="flex items-center">
+                        <span className="text-xs font-medium mr-2 text-gray-300">{entry.value}</span>
+                        <span className="text-xs bg-gray-700/80 px-1.5 py-0.5 rounded-md text-gray-300 font-medium">
+                          {percentage}%
+                        </span>
+                      </div>
+                    </div>
+                    <div className="mt-1 w-full bg-gray-700/40 rounded-full h-1">
+                      <div 
+                        className="h-1 rounded-full" 
+                        style={{ width: `${percentage}%`, backgroundColor: entry.color }}
+                      ></div>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              );
+            })}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
               <div>
                 <h3 className="text-lg font-semibold mb-2 text-gray-200">
